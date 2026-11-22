@@ -788,3 +788,10 @@ img.ex-anim { width: 100%; height: 100%; object-fit: contain; background: #fff; 
 .ex-photo { height: 240px; border-radius: 18px; overflow: hidden; background: #fff; display: grid; place-items: center; font-size: 5rem; box-shadow: var(--shadow); }
 .ex-sheet h2 { margin: 6px 0 0; }
 .ex-steps { padding-left: 20px; line-height: 1.5; margin: 4px 0 8px; }
+
+/* exercise animations */
+.lot { width: 100%; height: 100%; background: #fff; border-radius: inherit; }
+.lot svg { display: block; }
+.wk-thumb:has(.lot) { background: #fff; overflow: hidden; padding: 2px; }
+.player .move-emoji:has(.lot) { animation: none; width: 100%; max-width: 300px; height: 230px; margin: 6px auto; border-radius: 18px; overflow: hidden; background: #fff; box-shadow: var(--shadow); }
+.ex-photo .lot { height: 240px; }

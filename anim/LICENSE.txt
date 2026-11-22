@@ -1,0 +1,34 @@
+Bloom exercise animations
+
+All animations in this folder come from LottieFiles (lottiefiles.com) and are used under the
+Lottie Simple License (https://lottiefiles.com/page/license). They keep that license.
+
+walk.json: https://lottiefiles.com/free-animation/walking-hip-opener-standard-yJtiYrJwk0 by Dinh Bui Xuan
+jog.json: https://lottiefiles.com/free-animation/jogging-lottie-json-animation-LJC2HVVIJ8 by Weblodge
+treadmill.json: https://lottiefiles.com/free-animation/running-on-treadmill-1nArjWYiZd by Seyfi Cem Baskin
+bike.json: https://lottiefiles.com/free-animation/girl-cycling-JjizpkPvuZ by Sheikh Sohel
+rope.json: https://lottiefiles.com/free-animation/gympass-jump-rope-girl-yL3LYKGEKX by Bruno Alves
+jacks.json: https://lottiefiles.com/free-animation/jumping-jack-Q3NN7cRkd4 by Dinh Bui Xuan
+jumpsquat.json: https://lottiefiles.com/free-animation/jumping-squats-9hzVV8Ohi6 by Dinh Bui Xuan
+burpee.json: https://lottiefiles.com/free-animation/burpee-and-jump-exercise-gCOcxxnr1X by Dinh Bui Xuan
+highplank.json: https://lottiefiles.com/free-animation/t-plank-excercise-ctRMdlOaQE by Dinh Bui Xuan
+plank.json: https://lottiefiles.com/free-animation/t-plank-exercise-g5qVU6RPYY by Dinh Bui Xuan
+pushup.json: https://lottiefiles.com/free-animation/military-push-ups-sFmjfnsBQ9 by Dinh Bui Xuan
+widepushup.json: https://lottiefiles.com/free-animation/wide-arm-push-up-KD96z4DT4Y by Dinh Bui Xuan
+staggered.json: https://lottiefiles.com/free-animation/staggered-push-ups-zgWfOIvx3C by Dinh Bui Xuan
+crunch.json: https://lottiefiles.com/free-animation/reverse-crunches-79P2FMTS7Z by Dinh Bui Xuan
+abcircle.json: https://lottiefiles.com/free-animation/seated-abs-circle-pt5uPQZM1n by Dinh Bui Xuan
+frogpress.json: https://lottiefiles.com/free-animation/frog-press-LqkyGCKGpu by Dinh Bui Xuan
+cobra.json: https://lottiefiles.com/free-animation/cobras-w0bL4N81bN by Dinh Bui Xuan
+bridge.json: https://lottiefiles.com/free-animation/glute-bridge-slMOsir2ss by 1147
+hipthrust.json: https://lottiefiles.com/free-animation/barbell-hip-thrust-exercise-for-glutes-Umin2UVmtk by Vector Fitness
+squat.json: https://lottiefiles.com/free-animation/squat-reach-Dp1w6IjOlQ by Dinh Bui Xuan
+dbsquat.json: https://lottiefiles.com/free-animation/dumbbell-sumo-squat-wk2CTkVPDq by Bashir
+lunge.json: https://lottiefiles.com/free-animation/lunge-Ls3pMlE0a0 by Dinh Bui Xuan
+splitjump.json: https://lottiefiles.com/free-animation/split-jump-exercise-AHHpx1bumx by Dinh Bui Xuan
+stepup.json: https://lottiefiles.com/free-animation/step-up-on-chair-zcvfCJwhkF by Dinh Bui Xuan
+kick.json: https://lottiefiles.com/free-animation/squat-kicks-2UaqzO5zfR by Dinh Bui Xuan
+punch.json: https://lottiefiles.com/free-animation/punches-DK1guXUDFv by Dinh Bui Xuan
+inchworm.json: https://lottiefiles.com/free-animation/inchworm-oMKbWGAaDD by Dinh Bui Xuan
+stretch.json: https://lottiefiles.com/free-animation/shoulder-stretch-EN29iDeQQg by Dinh Bui Xuan
+breathe.json: https://lottiefiles.com/free-animation/breathing-exercise-QlQGE9JLXG by Sakib

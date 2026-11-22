@@ -59,14 +59,20 @@ const MOVE_ICONS = [
 ];
 const moveIcon = m => (MOVE_ICONS.find(([r]) => r.test(m)) || [0, '⭐'])[1];
 // real exercise photo (2 frames that flip, so it moves) or the icon when there is no photo
-const exPic = (m, cls = '') => { const id = exFor(m); return id ? `<img class="ex-anim ${cls}" data-id="${id}" data-f="0" src="${EX_IMG(id)}0.jpg" alt="${esc(m)}" loading="lazy">` : moveIcon(m); };
-const playerVisual = m => isVip() ? exPic(m, 'big') : moveIcon(m);
-setInterval(() => document.querySelectorAll('img.ex-anim').forEach(i => { i.dataset.f = i.dataset.f === '1' ? '0' : '1'; i.src = EX_IMG(i.dataset.id) + i.dataset.f + '.jpg'; }), 900);
+// animation for a move (bike and treadmill workouts keep showing the machine)
+function animFor(m, w) {
+  if (w && /rest|recover|cool down$/i.test(m)) return exFor(m);
+  if (w && (w.id === 'cycle' || (w.needs || []).includes('bike'))) return 'bike';
+  if (w && (w.needs || []).includes('treadmill')) return 'treadmill';
+  return exFor(m);
+}
+const exPic = (m, cls = '', w) => { const a = animFor(m, w); return a ? `<div class="lot ${cls}" data-a="${a}" data-fallback="${moveIcon(m)}" role="img" aria-label="${esc(m)}"></div>` : moveIcon(m); };
+const playerVisual = (m, w) => isVip() ? exPic(m, 'big', w) : moveIcon(m);
 
 // how to do one exercise (VIP)
-function exerciseSheet(m, back) {
-  const id = exFor(m), info = id && EX_INFO[id];
-  openModal(`<div class="ex-sheet"><div class="ex-photo">${exPic(m, 'big')}</div>
+function exerciseSheet(m, back, w) {
+  const info = null;
+  openModal(`<div class="ex-sheet"><div class="ex-photo">${exPic(m, 'big', w)}</div>
     <h2>${esc(m)}</h2>${info ? `<ol class="ex-steps">${info.s.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : (/combo|groove|freestyle|dance/i.test(m) ? '<p>Follow the music and copy the moves. Big arms, soft knees, keep moving!</p>' : '<p>Move slowly and with control. Breathe out on the hard part. Stop if anything hurts or you feel dizzy.</p>')}
     <button class="btn big" id="exBack">‹ Back to workout</button></div>`, () => { $('#exBack').onclick = back; });
 }
@@ -104,12 +110,12 @@ function workoutPage(w) {
     <div class="wk-stats"><div>⏱️ <b>${w.min}</b> mins</div><span></span><div>⚡ <b>${kcal}</b> calories</div></div>
     <div class="wk-tags">${w.jump ? '<span class="chip">🦘 Has jumping</span>' : '<span class="chip">🤫 No jumping</span>'}${(w.needs || []).map(g => { const x = GEAR.find(y => y[0] === g); return `<span class="chip">${x[1]} ${x[2]}</span>`; }).join('')}<span class="chip">🔥 ${Math.round(kcal / 7.7)} g fat</span></div>
     <h3 class="wk-h">Exercises (${w.moves.length})</h3>
-    <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
-    <p class="muted small wk-video">Tap an exercise to see how to do it.</p>
+    <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m, '', w)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
+    <p class="muted small wk-video">Tap an exercise to see how to do it.<br><span class="tiny">Animations from LottieFiles artists, Lottie Simple License.</span></p>
     <div class="wk-go"><button class="btn big" id="wkStart">▶ Start Now</button></div>`, m => {
     m.classList.add('full', 'wk-page');
     $('#wkStart').onclick = () => { m.classList.remove('full', 'wk-page'); playWorkout(w); };
-    m.querySelectorAll('.wk-ex').forEach(r => r.onclick = () => { m.classList.remove('full', 'wk-page'); exerciseSheet(w.moves[+r.dataset.i], () => workoutPage(w)); });
+    m.querySelectorAll('.wk-ex').forEach(r => r.onclick = () => { m.classList.remove('full', 'wk-page'); exerciseSheet(w.moves[+r.dataset.i], () => workoutPage(w), w); });
   });
 }
 const _closeModal2 = window.closeModal;
