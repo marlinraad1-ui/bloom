@@ -356,3 +356,57 @@ const DEFAULT_TEMPLATES = {
   ]},
   blank: { name: '✏️ My own plan (empty)', items: [] }
 };
+
+// ================= SCIENCE + HOW YOU MIGHT FEEL (per stage) =================
+// Real, published studies. Summaries are simplified; timings vary person to person.
+const SCIENCE = {
+  0:   { feel: 'Full, maybe a bit sleepy. Totally normal after eating.',
+         study: [{ src: 'Basic human physiology', text: 'After a meal, insulin rises within minutes and moves sugar into your liver and muscles to be stored as glycogen.' }] },
+  4:   { feel: 'The first light hunger pang may show up. It is a wave, not a wall.',
+         study: [{ src: 'Natalucci et al., 2005, European Journal of Endocrinology', text: 'During a 24 hour fast, the hunger hormone ghrelin still rose at people\'s usual meal times, then fell again on its own without any food. Hunger comes in waves.' }] },
+  8:   { feel: 'Clear headed between hunger waves. Maybe a little cold.',
+         study: [{ src: 'Rothman et al., 1991, Science', text: 'Using magnetic resonance scans, researchers watched liver glycogen drain steadily during the first day of fasting while the body started making its own new glucose.' }] },
+  12:  { feel: 'Hungry at meal times, calmer in between. Energy steadier than you expected.',
+         study: [{ src: 'Anton et al., 2018, Obesity', text: 'The "metabolic switch" from burning sugar to burning fat and ketones usually happens 12 to 36 hours after the last meal. You are flipping it right now.' }] },
+  16:  { feel: 'Focus often improves. Some people feel light and calm.',
+         study: [{ src: 'de Cabo & Mattson, 2019, New England Journal of Medicine', text: 'This review describes how fasting periods switch on stress-resistance and repair programs in cells and improve insulin sensitivity.' },
+                 { src: 'Alirezaei et al., 2010, Autophagy', text: 'In mice, short-term fasting (24 to 48 hours) strongly boosted autophagy, the cell clean-up process, even in brain cells.' }] },
+  24:  { feel: 'Day 1 done! A small headache is common. Salt water helps.',
+         study: [{ src: 'Zauner et al., 2000, American Journal of Clinical Nutrition', text: 'In healthy people, resting metabolism actually went UP during the first days of fasting, driven by noradrenaline. Your metabolism is not crashing.' }] },
+  36:  { feel: 'Hunger often quieter. Maybe tired in the afternoon.',
+         study: [{ src: 'Ho et al., 1988, Journal of Clinical Investigation', text: 'Growth hormone secretion rose several times above normal during fasting. Growth hormone helps protect your muscle while fat is burned.' }] },
+  48:  { feel: 'Many people say day 2 to 3 is easier than day 1. Sleep may be lighter.',
+         study: [{ src: 'Owen et al., 1967, Journal of Clinical Investigation', text: 'In longer fasts, the brain got most of its energy from ketones instead of sugar. Your brain is switching fuel too.' },
+                 { src: 'Cahill, 2006, Annual Review of Nutrition', text: 'Ketones let the body spare its protein during fasting, which is why fat, not muscle, becomes the main fuel.' }] },
+  72:  { feel: 'Mentally sharp or a bit drained. Both are normal. Move slowly.',
+         study: [{ src: 'Cheng et al., 2014, Cell Stem Cell', text: 'In mice, fasts of 2 to 4 days lowered IGF-1 and triggered stem cell based renewal of the immune system. Early human data pointed the same way.' }] },
+  96:  { feel: 'Steady and calm, but your body needs minerals every day now.',
+         study: [{ src: 'Wilhelmi de Toledo et al., 2019, PLOS ONE', text: 'In 1,422 people fasting 4 to 21 days in a supervised clinic, weight, blood pressure and wellbeing improved, and fasting was well tolerated with medical support.' }] },
+  120: { feel: 'Low energy for exercise, but often a strong mind.',
+         study: [{ src: 'Kerndt et al., 1982, Western Journal of Medicine', text: 'Long fasts are generally tolerated in healthy people, but electrolytes (sodium, potassium, magnesium) need watching. That is your number one job now.' }] },
+  144: { feel: 'You can see the finish line. Start planning a gentle refeed.',
+         study: [{ src: 'Mehanna et al., 2008, BMJ', text: 'After long fasts, eating too much too fast can cause refeeding syndrome. Restart food slowly: small portions over a few days.' }] },
+  168: { feel: 'Very deep fast. Rest is your main job.',
+         study: [{ src: 'Mehanna et al., 2008, BMJ', text: 'Refeeding risk rises with fast length. Fasts this long are best done with a doctor checking in.' }] },
+  240: { feel: 'Listen to your body above any goal.',
+         study: [{ src: 'Wilhelmi de Toledo et al., 2019, PLOS ONE', text: 'Fasts up to 21 days were safe in that study because they were medically supervised. Supervision is the key word.' }] }
+};
+function scienceFor(h) {
+  const keys = Object.keys(SCIENCE).map(Number).filter(k => k <= h).sort((a, b) => b - a);
+  const s = SCIENCE[keys[0] ?? 0];
+  return { feel: s.feel, study: s.study[Math.floor(h) % s.study.length] };
+}
+
+// ================= BODY METERS (estimates from research curves, not measured) =================
+const clamp = v => Math.max(0, Math.min(100, v));
+function bodyMeters(h) {
+  return [
+    { name: 'Blood sugar', emoji: '🩸', v: clamp(100 - 45 * (1 - Math.exp(-h / 10))), trend: 'down' },
+    { name: 'Insulin', emoji: '🔑', v: clamp(100 * Math.exp(-h / 7) + 8), trend: 'down' },
+    { name: 'Liver glycogen', emoji: '🔋', v: clamp(100 - h * 3.6), trend: 'down' },
+    { name: 'Fat burning', emoji: '🔥', v: clamp(12 + 85 * (1 - Math.exp(-h / 16))), trend: 'up' },
+    { name: 'Ketones', emoji: '⚡', v: clamp(h < 10 ? 2 : 100 * (1 - Math.exp(-(h - 10) / 40))), trend: 'up' },
+    { name: 'Growth hormone', emoji: '💪', v: clamp(15 + 85 * (1 - Math.exp(-h / 24))), trend: 'up' },
+    { name: 'Cell clean-up', emoji: '♻️', v: clamp(h < 14 ? 4 : 100 * (1 - Math.exp(-(h - 14) / 30))), trend: 'up', est: true }
+  ];
+}

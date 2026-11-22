@@ -118,8 +118,10 @@ async function renderCommunity() {
   try { await commInit(); } catch (e) { box.innerHTML = `<p class="muted">Couldn't connect to the community right now. Try again in a bit.</p>`; return; }
   $('#composer').hidden = false;
   renderCommunityHead();
-  if (!comm().name) return commProfile(loadFeed);
+  if (!comm().name) return commProfile(() => { loadFeed(); startLive(); });
   loadFeed();
+  loadFriends().catch(() => {}); startLive();
+  peopleTab(S.peopleTab || 'feed');
 }
 
 function postHTML(p) {
@@ -173,12 +175,13 @@ async function showProfile(uid) {
       <h2>${esc(p.name)}</h2>
       ${p.bio ? `<p>${esc(p.bio)}</p>` : ''}
       <div class="stats" style="width:100%"><div class="stat"><b>${posts.length}</b><span>posts</span></div><div class="stat"><b>${likesGot}</b><span>likes</span></div></div>
-      ${mine ? '<button class="btn" id="pvEdit">✏️ Edit my profile</button>' : '<button class="btn ghost" id="pvBlock">🚫 Block</button>'}
+      ${mine ? '<button class="btn" id="pvEdit">✏️ Edit my profile</button>' : `<div class="row gap wrap" style="justify-content:center">${friendButton(uid)}<button class="btn ghost" id="pvBlock">🚫 Block</button></div>`}
     </div>
     <div id="pvPosts" style="margin-top:12px">${posts.map(postHTML).join('') || '<p class="muted small">No posts yet.</p>'}</div>
     <button class="btn ghost big" style="margin-top:8px" onclick="closeModal()">Close</button>`, m => {
       if ($('#pvEdit')) $('#pvEdit').onclick = () => commProfile();
       if ($('#pvBlock')) $('#pvBlock').onclick = () => blockUser(uid);
+      if (!mine) hookFriendButton(uid, p);
       $('#pvPosts').addEventListener('click', postClick);
     });
   } catch (e) { openModal('<p>Couldn\'t load this profile.</p><button class="btn big" onclick="closeModal()">Close</button>'); }

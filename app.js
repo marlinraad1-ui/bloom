@@ -38,6 +38,32 @@ function day(k = todayKey()) {
 }
 
 // ================= HELPERS =================
+// animate numbers counting up
+function countUp(root) {
+  root.querySelectorAll('[data-count]').forEach(el => {
+    const to = +el.dataset.count, t0 = performance.now(), dur = 900;
+    const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e).toLocaleString(); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+}
+// little confetti burst for wins
+function celebrate() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const colors = [css('--accent'), css('--accent2'), css('--accent3'), '#ffd24d', '#ffffff'];
+  const box = document.createElement('div'); box.className = 'confetti'; document.body.appendChild(box);
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement('i');
+    p.style.left = (50 + (Math.random() - .5) * 30) + '%';
+    p.style.background = colors[i % colors.length];
+    p.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'vw');
+    p.style.setProperty('--dy', (-40 - Math.random() * 50) + 'vh');
+    p.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    p.style.animationDelay = (Math.random() * .15) + 's';
+    box.appendChild(p);
+  }
+  setTimeout(() => box.remove(), 2200);
+}
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
@@ -102,9 +128,13 @@ $('#themeBtn').onclick = () => openModal(`
 
 // ================= NAV =================
 document.querySelectorAll('.tabbar button').forEach(b => b.onclick = () => showView(b.dataset.view));
+const VIEW_ORDER = ['home', 'plan', 'body', 'move', 'community', 'chat'];
+let curView = 'home';
 function showView(v) {
+  const dir = VIEW_ORDER.indexOf(v) >= VIEW_ORDER.indexOf(curView) ? 'in-right' : 'in-left';
+  curView = v;
   document.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('active', x.dataset.view === v));
-  document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
+  document.querySelectorAll('.view').forEach(x => { const on = x.id === 'view-' + v; x.classList.remove('in-right', 'in-left'); x.classList.toggle('active', on); if (on) { void x.offsetWidth; x.classList.add(dir); } });
   if (v === 'body') renderBody();
   if (v === 'plan') { renderWater(); if (!S.water?.goal && !S.waterPrompted) { S.waterPrompted = true; save(); waterGoalModal(true); } }
   if (v === 'community') renderCommunity();
@@ -245,6 +275,10 @@ function startFastModal() {
   });
 }
 function endFast() {
+  if (S.fast && fastHours() < S.fast.goal) return showVision({ breaking: true, onStop: endFastConfirm });
+  endFastConfirm();
+}
+function endFastConfirm() {
   const h = fastHours();
   openModal(`<h2>End your fast?</h2>
     <p>You fasted <b>${fmtDur(h)}</b> of your ${S.fast.goal}h goal. ${h >= S.fast.goal ? '🎉 Goal reached!' : 'Ending early for your health is always okay. 💕'}</p>
@@ -290,25 +324,34 @@ function renderFast() {
     $('#endFastBtn').onclick = endFast;
     $('#checkBtn').onclick = bodyCheck;
     $('#shareBtn').onclick = shareCard;
-    $('#talkBtn').onclick = () => { showView('chat'); sendChat('I want to break my fast'); };
+    $('#talkBtn').onclick = () => showVision({ breaking: true, onStop: () => { showView('chat'); sendChat('I want to break my fast'); } });
   }
   const hr = Math.floor(h);
   if ($('#stageCard').dataset.hr !== String(hr)) {
     $('#stageCard').dataset.hr = hr;
     const left = f.goal - h, burned = h * bmr() / 24 * 1.1;
+    const sci = scienceFor(h), meters = bodyMeters(h), n = hypeNums();
     $('#stageCard').innerHTML = `
       <div class="stage-hour">Hour ${hr}${hr >= 24 ? ' · Day ' + (Math.floor(h / 24) + 1) : ''} · next update in ${60 - new Date().getMinutes()} min</div>
-      <div class="hype">${esc(hypeFor(hypeNums()))}</div>
-      <h3>${s.emoji} ${s.name}</h3>
+      <div class="hype pop-in">${esc(hypeFor(n))}</div>
+      <div class="stat-row">
+        <div class="mini-stat"><b data-count="${n.kcal}">0</b><span>kcal burned</span></div>
+        <div class="mini-stat"><b data-count="${n.fatG}">0</b><span>g fat used</span></div>
+        <div class="mini-stat"><b>${left > 0 ? fmtDur(left) : '🎉'}</b><span>${left > 0 ? 'to go' : 'goal reached'}</span></div>
+      </div>
+      <h3 class="stage-title">${s.emoji} ${s.name}</h3>
       <p>${s.body}</p>
-      <div class="stage-fact">${s.fact}</div>
+      <div class="stage-fact"><b>Right now:</b> ${s.fact}</div>
+      <div class="meters">${meters.map((m, i) => `<div class="meter" style="--d:${i * 70}ms"><span class="m-name">${m.emoji} ${m.name}${m.est ? '*' : ''}</span><span class="m-bar"><i class="${m.trend}" style="--w:${Math.round(m.v)}%"></i></span><span class="m-arrow ${m.trend}">${m.trend === 'up' ? '▲' : '▼'}</span></div>`).join('')}
+        <p class="muted tiny">Estimates from research averages, not measured. *Cell clean-up timing in humans is still being studied.</p></div>
+      <div class="science"><div class="sci-tag">🔬 Science says</div><p>${sci.study.text}</p><div class="sci-src">${sci.study.src}</div></div>
+      <p class="feel"><b>You might feel:</b> ${sci.feel}</p>
       <p class="stage-motiv">${s.motivation}</p>
-      <p><b>Tip:</b> ${s.tip}</p>
+      <p><b>Do this now:</b> ${s.tip}</p>
       <div class="chips">
-        <span class="chip">🔥 ~${Math.round(burned)} kcal burned since start</span>
-        <span class="chip">⏳ ${left > 0 ? fmtDur(left) + ' to go' : 'Goal reached! 🎉'}</span>
         ${f.reason ? `<span class="chip">💭 ${esc(f.reason)}</span>` : ''}
       </div>`;
+    countUp($('#stageCard'));
     // timeline
     const max = Math.min(f.goal, 360), step = max > 168 ? 12 : max > 72 ? 6 : max > 36 ? 2 : 1;
     let tl = '';
@@ -331,6 +374,7 @@ function checkFastHour() {
     S.fast.lastHour = h; save();
     const s = stageFor(h);
     if (msgDue(h)) notify(`⏳ Hour ${h}: ${s.name} ${s.emoji}`, `${hypeFor(hypeNums())}\n${s.fact}${h % 4 === 0 || msgEvery() >= 4 ? '\n🩺 Quick body check: how do you feel?' : ''}`);
+    if (h === S.fast.goal) { celebrate(); setTimeout(celebrate, 900); }
     if (h === S.fast.goal) notify('🎉 Goal reached!', `You completed your ${S.fast.goal}h fast. So proud of you!`);
   }
 }
@@ -409,7 +453,7 @@ function showCheckResult(level, picked, energy, mood) {
   }
   openModal(html, () => {
     if ($('#ckOk')) $('#ckOk').onclick = closeModal;
-    if ($('#ckEnd')) $('#ckEnd').onclick = () => { closeModal(); if (S.fast) endFast(); };
+    if ($('#ckEnd')) $('#ckEnd').onclick = () => { closeModal(); if (S.fast) endFastConfirm(); };
   });
 }
 // ---- Progress photos (IndexedDB, stays on this device) ----
@@ -528,7 +572,7 @@ function addDrink(ml, kind = 'water', planId) {
   d.drinks.push({ at: Date.now(), ml, kind, planId });
   refreshWaterViews();
   const t = waterTotal(), g = S.water?.goal;
-  if (g && t >= g && before < g) { toast('💧 Water goal reached! Amazing 🎉'); notify('💧 Water goal reached!', 'You hit your water goal today. Your body says thank you.'); }
+  if (g && t >= g && before < g) { celebrate(); toast('💧 Water goal reached! Amazing 🎉'); notify('💧 Water goal reached!', 'You hit your water goal today. Your body says thank you.'); }
   else toast(`+${ml} ml ${DRINKS[kind].split(' ')[0]}`);
   if (t > 4000 && before <= 4000) openModal(`<h2>⚠️ That's a lot of water</h2><p>You've had over 4 L today. Too much water, especially while fasting, can lower your sodium and make you sick. Slow down, and add a pinch of salt if you keep drinking.</p><button class="btn big" onclick="closeModal()">Okay</button>`);
 }
@@ -647,7 +691,7 @@ $('#taskList').addEventListener('click', e => {
   const id = btn.closest('.task').dataset.id, it = S.today.items.find(x => x.id === id);
   const act = btn.dataset.act;
   if (act === 'done' && it.water) return toggleWaterItem(it);
-  if (act === 'done') { it.done = !it.done; if (it.done) toast(cheer()); }
+  if (act === 'done') { it.done = !it.done; if (it.done) { toast(cheer()); if (S.today.items.every(i => i.done)) celebrate(); } }
   if (act === 'alarm') it.alarm = !it.alarm;
   if (act === 'notify') it.notify = !it.notify;
   if (act === 'edit') return taskForm(it);
@@ -793,6 +837,7 @@ $('#logWeightBtn').onclick = () => {
   const w = +$('#weightInput').value; if (!w) return;
   const prev = S.weights.length ? S.weights[S.weights.length - 1].kg : null;
   addWeight(w); save(); $('#weightInput').value = ''; renderBody(); renderGlance();
+  if (prev && w < prev) celebrate();
   toast(prev && w < prev ? `−${(prev - w).toFixed(1)} kg! Amazing 🌟` : 'Logged. Progress isn\'t always a straight line 💕');
 };
 $('#bodyCheckBtn').onclick = bodyCheck;
@@ -1013,6 +1058,7 @@ function sendChat(text) {
   setTimeout(() => {
     buddyReply(text, chatCtx()).forEach(r => S.chat.push({ who: 'bot', ...r }));
     S.chat = S.chat.slice(-120); save(); renderChat();
+    if (S.fast && anyMatch(QUIT, text.toLowerCase()) && ![RED_FLAGS, SICK, SAD, ED, MEDICAL].some(l => anyMatch(l, text.toLowerCase()))) setTimeout(() => showVision({ breaking: true, onStop: endFastConfirm }), 1800);
   }, 500);
 }
 $('#chatForm').onsubmit = e => { e.preventDefault(); sendChat($('#chatInput').value); $('#chatInput').value = ''; };
@@ -1026,7 +1072,7 @@ function renderHeader() {
   $('#hello').textContent = `${g}${n ? ', ' + n : ''}${theme().mascot ? ' ' + theme().mascot : ''}`;
   $('#todayLabel').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
 }
-function renderAll() { applyTheme(); renderHeader(); $('#stageCard').dataset.hr = ''; $('#fastControls').innerHTML = ''; renderFast(); renderPlan(); renderGlance(); renderSteps(); renderWorkouts(); renderBody(); notifState(); }
+function renderAll() { applyTheme(); renderHeader(); if (window.renderVisionCard) renderVisionCard(); $('#stageCard').dataset.hr = ''; $('#fastControls').innerHTML = ''; renderFast(); renderPlan(); renderGlance(); renderSteps(); renderWorkouts(); renderBody(); notifState(); }
 
 let lastMinute = -1;
 setInterval(() => {

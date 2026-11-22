@@ -45,6 +45,8 @@
 
       <div class="card stagecard" id="stageCard"></div>
 
+      <div class="card" id="visionCard"></div>
+
       <div class="card">
         <h3>Today at a glance</h3>
         <div class="stats" id="glance"></div>
@@ -165,6 +167,8 @@
 
     <!-- COMMUNITY -->
     <section class="view" id="view-community">
+      <div class="seg people-seg" id="peopleSeg"><button type="button" data-p="feed" class="on">🌍 Feed</button><button type="button" data-p="friends">💬 Friends</button></div>
+      <div id="feedPanel">
       <div class="card">
         <div class="row between"><h3>👥 Community</h3><button class="btn ghost" id="feedRefresh" style="padding:6px 12px">↻ Refresh</button></div>
         <div class="small" id="commMe"></div>
@@ -181,6 +185,8 @@
         </div>
       </div>
       <div id="feed"></div>
+      </div>
+      <div id="friendsPanel" hidden></div>
     </section>
 
     <!-- CHAT -->
@@ -224,7 +230,9 @@
 <script src="data.js"></script>
 <script src="chat.js"></script>
 <script src="app.js"></script>
+<script src="vision.js"></script>
 <script src="community.js"></script>
+<script src="friends.js"></script>
 <script src="native.js"></script>
 </body>
 </html>
