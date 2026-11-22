@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" data-theme="kawaii">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff8fb8">
+<title>Bloom – Fasting Buddy</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Playfair+Display:wght@600;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <div class="hello" id="hello">Hi there</div>
+      <div class="sub" id="todayLabel"></div>
+    </div>
+    <div class="topbtns">
+      <button class="iconbtn" id="themeBtn" title="Change style">🎨</button>
+      <button class="iconbtn" id="settingsBtn" title="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME / FAST -->
+    <section class="view active" id="view-home">
+      <div class="card fastcard">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 200 200" class="ring">
+            <circle cx="100" cy="100" r="86" class="ring-bg"/>
+            <circle cx="100" cy="100" r="86" class="ring-fg" id="ringFg"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-emoji" id="stageEmoji">🌱</div>
+            <div class="ring-time" id="fastTime">00:00:00</div>
+            <div class="ring-label" id="fastLabel">Not fasting</div>
+          </div>
+        </div>
+        <div id="fastControls"></div>
+      </div>
+
+      <div class="card stagecard" id="stageCard"></div>
+
+      <div class="card">
+        <h3>Today at a glance</h3>
+        <div class="stats" id="glance"></div>
+      </div>
+
+      <div class="card">
+        <h3>Next on your plan</h3>
+        <div id="nextTask"></div>
+      </div>
+
+      <div class="card">
+        <h3>Your journey (hour by hour)</h3>
+        <p class="muted small">Tap any hour to read what's happening in your body.</p>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+    <!-- PLAN -->
+    <section class="view" id="view-plan">
+      <div class="card">
+        <div class="row between">
+          <h3>Today's plan</h3>
+          <select id="templateSelect"></select>
+        </div>
+        <div class="progress"><div id="planProgress"></div></div>
+        <p class="muted small" id="planProgressLabel"></p>
+        <ul class="tasks" id="taskList"></ul>
+        <div class="row gap wrap">
+          <button class="btn" id="addTaskBtn">＋ Add</button>
+          <button class="btn ghost" id="voiceBtn">🎙️ Say it</button>
+          <button class="btn ghost" id="saveTemplateBtn">💾 Save as my plan</button>
+        </div>
+        <p class="muted small">Voice examples: “7:30 wake up for school”, “at 9 pm drink water 300 ml”, “14:00 study because exam”.</p>
+      </div>
+      <div class="card">
+        <h3>Reminders &amp; alarms</h3>
+        <p class="small" id="notifStatus"></p>
+        <div class="row gap wrap">
+          <button class="btn" id="enableNotifBtn">🔔 Allow notifications</button>
+          <button class="btn ghost" id="testAlarmBtn">⏰ Test alarm</button>
+        </div>
+        <p class="muted small">Tasks with ⏰ ring a real alarm sound with a pop-up; tasks with 🔔 just send a notification. Keep Bloom open (or installed &amp; in the background) for reminders to fire.</p>
+      </div>
+    </section>
+
+    <!-- BODY -->
+    <section class="view" id="view-body">
+      <div class="card">
+        <h3>BMI &amp; your numbers</h3>
+        <div class="stats" id="bmiStats"></div>
+        <div class="bmi-bar"><div class="bmi-marker" id="bmiMarker"></div></div>
+        <div class="bmi-legend"><span>Under</span><span>Healthy</span><span>Over</span><span>Obese</span></div>
+      </div>
+      <div class="card">
+        <h3>Weigh-in</h3>
+        <div class="row gap">
+          <input type="number" step="0.1" id="weightInput" placeholder="kg">
+          <button class="btn" id="logWeightBtn">Log</button>
+        </div>
+        <canvas id="weightChart" height="180"></canvas>
+        <p class="small" id="weightSummary"></p>
+      </div>
+      <div class="card">
+        <h3>Calories burned today</h3>
+        <div class="row gap wrap">
+          <label class="small">Slept (h) <input type="number" step="0.5" id="sleepInput" class="mini"></label>
+          <label class="small">Ate / drank (kcal) <input type="number" id="intakeInput" class="mini"></label>
+        </div>
+        <div id="burnBreakdown"></div>
+      </div>
+      <div class="card">
+        <h3>Fasting history</h3>
+        <ul class="list" id="fastHistory"></ul>
+      </div>
+    </section>
+
+    <!-- MOVE -->
+    <section class="view" id="view-move">
+      <div class="card">
+        <h3>Steps</h3>
+        <div class="steps-big"><span id="stepCount">0</span><small> / <span id="stepGoal">20000</span></small></div>
+        <div class="progress"><div id="stepProgress"></div></div>
+        <p class="small" id="stepKcal"></p>
+        <div class="row gap wrap">
+          <button class="btn" id="pedoBtn">👟 Start step counter</button>
+          <input type="number" id="addStepsInput" class="mini" placeholder="+ steps">
+          <button class="btn ghost" id="addStepsBtn">Add</button>
+        </div>
+        <p class="muted small">The phone counter works while Bloom is open on your phone (screen on, phone in pocket/hand). You can also type steps from your phone's health app.</p>
+      </div>
+      <div class="card">
+        <h3>Workouts</h3>
+        <p class="muted small" id="workoutHint"></p>
+        <div id="workoutList"></div>
+      </div>
+      <div class="card">
+        <h3>Done today</h3>
+        <ul class="list" id="workoutLog"></ul>
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section class="view" id="view-chat">
+      <div class="card chatcard">
+        <div class="chat-head">
+          <div class="buddy" id="buddyFace">🐰</div>
+          <div>
+            <div class="buddy-name" id="buddyName">Mochi</div>
+            <div class="muted small">Your gentle fasting buddy · not a doctor</div>
+          </div>
+        </div>
+        <div class="chat" id="chatLog"></div>
+        <div class="quick" id="quickReplies"></div>
+        <form class="chat-input" id="chatForm">
+          <input id="chatInput" placeholder="Tell me how you feel…" autocomplete="off">
+          <button class="iconbtn" type="button" id="chatMic">🎙️</button>
+          <button class="btn" type="submit">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-view="home" class="active"><span>⏳</span>Fast</button>
+    <button data-view="plan"><span>📋</span>Plan</button>
+    <button data-view="body"><span>⚖️</span>Body</button>
+    <button data-view="move"><span>🏃</span>Move</button>
+    <button data-view="chat"><span>💬</span>Buddy</button>
+  </nav>
+</div>
+
+<!-- Modal container -->
+<div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="chat.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
