@@ -18,7 +18,7 @@ const FX = {
 const fxSrc = e => FX[e] ? FX_BASE + encodeURI(`${FX[e]}/3D/${FX[e].toLowerCase().replace(/ /g, '_')}_3d.png`) : null;
 const FX_RE = new RegExp(Object.keys(FX).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
 // places that get 3D emojis
-const FX_SEL = '.auth-hero, .hello .mascot, .tabbar span, .topbtns .iconbtn, h2, h3, .ring-emoji, .buddy, .slide-big, .shame-face, .w-icon, .tl div, .alarm-ring, .mini-stat span, .stage-title, .pin-tag, .dev-crown, .people-seg button, .s-time, .theme-card .tc-name, .wday b';
+const FX_SEL = '.vip-hero, .vp-e, .auth-hero, .hello .mascot, .tabbar span, .topbtns .iconbtn, h2, h3, .ring-emoji, .buddy, .slide-big, .shame-face, .w-icon, .tl div, .alarm-ring, .mini-stat span, .stage-title, .pin-tag, .dev-crown, .people-seg button, .s-time, .theme-card .tc-name, .wday b';
 
 function upgradeEmojis(root = document) {
   const els = root.matches?.(FX_SEL) ? [root] : [];

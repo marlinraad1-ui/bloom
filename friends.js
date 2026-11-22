@@ -2,7 +2,7 @@
 // Add friends from their profile or by searching a name, accept requests,
 // then chat 1 on 1 (text + photos). Messages arrive live.
 
-const PCOLS = 'id, name, avatar, photo_url, is_dev';
+const PCOLS = 'id, name, avatar, photo_url, is_dev, vip_until, name_fx, ring';
 let friendsCache = { friends: [], incoming: [], outgoing: [], lastMsg: {}, unread: {} };
 let liveChannel = null, openChatWith = null;
 

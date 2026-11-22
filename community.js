@@ -5,11 +5,12 @@
 
 const AVATARS = ['🌸', '🐰', '😈', '🔥', '💪', '🌙', '🦋', '🐻', '🍓', '⚡', '👑', '🌈', '🐱', '🐼', '🦊', '💎', '🐳', '🍵', '🍑', '🪐', '🎤'];
 let sb = null, me = null, feedBusy = false, myLikes = new Set();
-const PROFILE_COLS = 'name, avatar, photo_url, show_weight, is_dev';
+const PROFILE_COLS = 'name, avatar, photo_url, show_weight, is_dev, vip_until, name_fx, ring';
 const RESERVED = /(dev|stasia|admin|bloom team|moderator)/i;
 // glowing developer name, normal name for everyone else
 const nameHTML = p => p?.is_dev
-  ? `<span class="dev-name"><span class="dev-tag">DEV.</span> ${esc(p.name)} <span class="dev-crown">👑</span></span>`
+  ? `<span class="dev-name"><span class="dev-tag">DEV.</span> ${esc(p.name)} <span class="dev-crown">👑</span></span> <span class="vip-badge">VIP</span>`
+  : vipOf(p) ? `<span class="vip-name fx-${esc(p.name_fx || 'gold')}">${esc(p.name)}</span> <span class="vip-badge">VIP</span>`
   : esc(p?.name || 'Someone');
 
 const comm = () => (S.community = S.community || { name: '', avatar: '🌸', photo_url: null, bio: '', show_weight: true, blocked: [] });
@@ -21,9 +22,12 @@ function timeAgo(t) {
   if (s < 86400) return Math.floor(s / 3600) + 'h';
   return Math.floor(s / 86400) + 'd';
 }
-const avatarHTML = (p, cls = '') => p?.photo_url
-  ? `<img class="avatar ${cls}" src="${esc(p.photo_url)}" alt="">`
-  : `<span class="avatar ${cls}">${esc(p?.avatar || '🌸')}</span>`;
+const avatarHTML = (p, cls = '') => {
+  const ring = vipOf(p) && p.ring ? ` ring-${esc(p.ring)}` : '';
+  return p?.photo_url
+    ? `<img class="avatar ${cls}${ring}" src="${esc(p.photo_url)}" alt="">`
+    : `<span class="avatar ${cls}${ring}">${esc(p?.avatar || '🌸')}</span>`;
+};
 
 async function commInit() {
   if (sb) return true;
@@ -39,14 +43,14 @@ async function commInit() {
   // load my profile from the server (or create it from what this phone remembers)
   const { data: prof } = await sb.from('profiles').select('*').eq('id', me).maybeSingle();
   const c = comm();
-  if (prof) Object.assign(c, { name: prof.name, avatar: prof.avatar, photo_url: prof.photo_url, bio: prof.bio || '', show_weight: prof.show_weight, is_dev: prof.is_dev });
+  if (prof) Object.assign(c, { name: prof.name, avatar: prof.avatar, photo_url: prof.photo_url, bio: prof.bio || '', show_weight: prof.show_weight, is_dev: prof.is_dev, vip_until: prof.vip_until, banner: prof.banner, name_fx: prof.name_fx, ring: prof.ring });
   else if (c.name) { const r = await saveProfileRemote(); if (r.error) c.name = ''; }
   save();
   return true;
 }
 async function saveProfileRemote() {
   const c = comm();
-  return sb.from('profiles').upsert({ id: me, name: c.name, avatar: c.avatar, photo_url: c.photo_url || null, bio: c.bio || null, show_weight: !!c.show_weight, updated_at: new Date().toISOString() });
+  return sb.from('profiles').upsert({ id: me, name: c.name, avatar: c.avatar, photo_url: c.photo_url || null, bio: c.bio || null, show_weight: !!c.show_weight, banner: c.banner || null, name_fx: c.name_fx || null, ring: c.ring || null, updated_at: new Date().toISOString() });
 }
 
 function commProfile(after) {
@@ -62,9 +66,11 @@ function commProfile(after) {
     <div class="field"><label>Bio (optional)</label><input id="cBio" maxlength="200" value="${esc(c.bio || '')}" placeholder="e.g. 7 day fast for my faith 🙏 down 6 kg"></div>
     <div class="field"><label>Emoji (used when you have no photo)</label><div class="chips" id="cAv">${AVATARS.map(a => `<button type="button" class="chip pick ${a === av ? 'on' : ''}" data-a="${a}" style="font-size:1.3rem">${a}</button>`).join('')}</div></div>
     <label class="small toggle-row"><input type="checkbox" id="cWeight" ${c.show_weight ? 'checked' : ''}> ⚖️ Show my weight in posts</label>
+    <button type="button" class="btn ghost big vip-btn" id="cVip" style="margin-bottom:10px">✨ Live banner, name glow and ring <span class="vip-badge">VIP</span></button>
     <button class="btn big" id="cSave">Save</button>
     <div class="acct" id="acctBox"></div>`, () => {
     renderAccountBox();
+    $('#cVip').onclick = () => vipCustomizer();
     const pic = () => { $('#cPic').innerHTML = (newPhoto || photo) ? `<img src="${newPhoto || photo}" alt="">` : `<span>${av}</span>`; };
     document.querySelectorAll('#cAv button').forEach(b => b.onclick = () => { av = b.dataset.a; document.querySelectorAll('#cAv button').forEach(x => x.classList.toggle('on', x === b)); pic(); });
     $('#cPicBtn').onclick = () => $('#cPicIn').click();
@@ -185,7 +191,7 @@ async function showProfile(uid) {
     const [{ data: prof }, posts] = await Promise.all([sb.from('profiles').select('*').eq('id', uid).maybeSingle(), fetchPosts(uid)]);
     const p = prof || { name: 'Someone', avatar: '🌸' }, mine = uid === me;
     const likesGot = posts.reduce((a, x) => a + (x.likes?.[0]?.count || 0), 0);
-    openModal(`<div class="prof-view">
+    openModal(`${bannerHTML(p)}<div class="prof-view ${vipOf(p) && p.banner ? 'has-banner' : ''}">
       ${avatarHTML(p, 'xl')}
       <h2>${nameHTML(p)}</h2>${p.is_dev ? '<p class="dev-sub">Creator of Bloom ✨ Everyone follows the developer.</p>' : ''}
       ${p.bio ? `<p>${esc(p.bio)}</p>` : ''}

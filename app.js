@@ -78,6 +78,9 @@ $('#modalBack').addEventListener('click', e => { if (e.target.id === 'modalBack'
 const fmtHMS = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return [Math.floor(s / 3600), Math.floor(s % 3600 / 60), s % 60].map(n => String(n).padStart(2, '0')).join(':'); };
 const fmtDur = h => h < 48 ? `${Math.floor(h)}h ${Math.round((h % 1) * 60)}m` : `${Math.floor(h / 24)}d ${Math.floor(h % 24)}h`;
 const kg = () => (S.weights.length ? S.weights[S.weights.length - 1].kg : S.profile?.weight) || 70;
+// VIP: the developer always counts as VIP
+const vipOf = p => !!p && (!!p.is_dev || (!!p.vip_until && new Date(p.vip_until) > new Date()));
+const isVip = () => vipOf(S.community);
 const fastHours = () => S.fast ? (Date.now() - S.fast.start) / 3600000 : 0;
 
 // ================= BODY MATH =================
@@ -109,11 +112,15 @@ const THEMES = {
   galaxy: { name: 'Galaxy', desc: 'Deep space, stars and planets', mascot: '🪐', color: '#1a1033', bg: 'linear-gradient(135deg,#140c2e,#2a1650)', fg: '#c9b6ff', font: "'Orbitron'" },
   neon:   { name: 'K-pop Neon', desc: 'Concert lights, hot pink and cyan', mascot: '🎤', color: '#0b0b12', bg: 'linear-gradient(135deg,#0b0b12,#1a0b1f)', fg: '#ff4fd8', font: "'Bungee'" },
   goddess: { name: 'Greek Goddess', desc: 'White marble, gold and laurel. Divine.', mascot: '🏛️', color: '#c9a227', bg: 'linear-gradient(135deg,#fffaf0,#efe4c8)', fg: '#6b5320', font: "'Cinzel'" },
+  rosegold: { name: 'Rose Gold Luxe', desc: 'Champagne, rose gold and diamonds', mascot: '💎', color: '#b76e79', bg: 'linear-gradient(135deg,#fff6f2,#f6dcd3)', fg: '#5a2f33', font: "'Playfair Display'" },
+  sakuranight: { name: 'Midnight Sakura', desc: 'Moonlit night with falling petals', mascot: '🌙', color: '#141a38', bg: 'linear-gradient(135deg,#141a38,#2d1d48)', fg: '#ffb3d1', font: "'Fredoka'" },
   simple: { name: 'Simple', desc: 'Clean, no distractions', mascot: '', color: '#2563eb', bg: '#fff', fg: '#1d2430', font: 'system-ui' }
 };
+const VIP_THEMES = ['ocean', 'peach', 'galaxy', 'neon', 'goddess', 'rosegold', 'sakuranight'];
+const UPCOMING_THEMES = [['🎀', 'Dollhouse Pink'], ['☁️', 'Anime Sky'], ['🖤', 'Black Diamond'], ['🦋', 'Y2K Butterfly'], ['🍒', 'Cherry Cola']];
 const theme = () => THEMES[S.theme] || THEMES.kawaii;
 function applyTheme() {
-  if (!THEMES[S.theme]) S.theme = 'kawaii';
+  if (!THEMES[S.theme] || (VIP_THEMES.includes(S.theme) && !isVip())) S.theme = 'kawaii';
   document.documentElement.dataset.theme = S.theme;
   document.querySelector('meta[name=theme-color]').content = theme().color;
   const b = BUDDY[S.persona] || BUDDY.sweet; $('#buddyFace').textContent = b.face; $('#buddyName').textContent = b.name;
@@ -124,8 +131,16 @@ $('#themeBtn').onclick = () => openModal(`
     <button data-t="${k}" class="theme-card ${S.theme === k ? 'on' : ''}" style="background:${t.bg};color:${t.fg}">
       <span class="tc-art" data-theme="${k}"></span>
       <span class="tc-name" style="font-family:${t.font},sans-serif">${t.mascot} ${t.name}</span>
-      <span class="tc-desc">${t.desc}</span>
-    </button>`).join('')}</div>`, m => m.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { S.theme = b.dataset.t; save(); applyTheme(); renderAll(); closeModal(); }));
+      <span class="tc-desc">${t.desc}</span>${VIP_THEMES.includes(k) ? `<span class="tc-vip">${isVip() ? '👑 VIP' : '🔒 VIP'}</span>` : ''}
+    </button>`).join('')}
+    ${UPCOMING_THEMES.map(([e, n]) => `<div class="theme-card soon"><span class="tc-vip">⏳ Soon</span><span class="tc-name">${e} ${n}</span><span class="tc-desc">Coming for VIP</span></div>`).join('')}</div>
+  ${isVip() ? '' : '<button class="btn big vip-btn" id="thVip">👑 Unlock all themes with VIP</button>'}`, m => {
+    m.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+      if (VIP_THEMES.includes(b.dataset.t) && !isVip()) return vipModal('themes');
+      S.theme = b.dataset.t; save(); applyTheme(); renderAll(); closeModal();
+    });
+    if ($('#thVip')) $('#thVip').onclick = () => vipModal('themes');
+  });
 
 // ================= NAV =================
 document.querySelectorAll('.tabbar button').forEach(b => b.onclick = () => showView(b.dataset.view));
@@ -847,7 +862,6 @@ $('#bodyCheckBtn').onclick = bodyCheck;
 $('#photoAddBtn').onclick = bodyCheck;
 $('#shareBtn2').onclick = shareCard;
 $('#sleepInput').onchange = e => { day().sleep = +e.target.value || 0; save(); renderBody(); renderGlance(); };
-$('#intakeInput').onchange = e => { day().intake = +e.target.value || 0; save(); renderBody(); };
 
 function renderBody() {
   if (!S.profile) return;
@@ -861,7 +875,7 @@ function renderBody() {
   drawWeightChart();
   const lost = start - kg();
   $('#weightSummary').innerHTML = S.weights.length > 1 ? (lost > 0 ? `You've lost <b>${lost.toFixed(1)} kg</b> since ${S.weights[0].date} 🎉` : 'Keep going. The scale catches up with your effort.') : 'Log your weight each morning (same time, after the toilet) for the best chart.';
-  const d = day(); $('#sleepInput').value = d.sleep; $('#intakeInput').value = d.intake || '';
+  const d = day(); $('#sleepInput').value = d.sleep; if (window.renderFood) { renderFood(); }
   const x = burnToday(), deficit = x.total - x.intake;
   $('#burnBreakdown').innerHTML = `
     <div class="burn-row"><span>😴 Sleeping (${d.sleep}h)</span><b>${Math.round(x.sleep)} kcal</b></div>
@@ -870,7 +884,7 @@ function renderBody() {
     <div class="burn-row"><span>🏋️ Workouts (${d.workouts.length})</span><b>${Math.round(x.work)} kcal</b></div>
     ${S.fast ? `<div class="burn-row"><span>⏳ Fasting: total since start</span><b>${Math.round(fastHours() * bmr() / 24 * 1.1)} kcal</b></div>` : ''}
     <div class="burn-row burn-total"><span>Total burned today</span><span>${Math.round(x.total)} kcal</span></div>
-    <div class="burn-row"><span>Eaten / drunk</span><b>${Math.round(x.intake)} kcal</b></div>
+    <div class="burn-row"><span>🍽️ Eaten / drunk</span><b>${Math.round(x.intake)} kcal</b></div>
     <div class="burn-row burn-total"><span>Deficit</span><span style="color:var(--good)">${Math.round(deficit)} kcal ≈ ${Math.round(deficit / 7.7)} g fat</span></div>
     <p class="muted small">Estimates (Mifflin-St Jeor + activity). 7,700 kcal ≈ 1 kg of fat. Early fasting weight loss also includes water.</p>`;
   renderChecks(); renderPhotos();
@@ -912,7 +926,15 @@ function renderSteps() {
   $('#stepProgress').style.width = Math.min(100, d.steps / g * 100) + '%';
   $('#stepKcal').textContent = `≈ ${Math.round(stepKcal(d.steps))} kcal from steps · ${(d.steps * 0.00075).toFixed(1)} km`;
 }
-$('#addStepsBtn').onclick = () => { const n = +$('#addStepsInput').value; if (!n) return; day().steps = Math.max(0, day().steps + n); $('#addStepsInput').value = ''; save(); renderSteps(); renderGlance(); };
+function changeSteps(n, set) {
+  const d = day(), before = d.steps;
+  d.steps = Math.max(0, Math.round(set ? n : d.steps + n));
+  $('#addStepsInput').value = ''; save(); renderSteps(); renderGlance(); renderBody();
+  const diff = stepKcal(d.steps) - stepKcal(before);
+  toast(`👟 ${d.steps.toLocaleString()} steps today · ${diff >= 0 ? '+' : ''}${Math.round(diff)} kcal burned 🔥`);
+}
+$('#addStepsBtn').onclick = () => { const n = +$('#addStepsInput').value; if (n) changeSteps(n, false); };
+$('#setStepsBtn').onclick = () => { const n = +$('#addStepsInput').value; if (n >= 0 && $('#addStepsInput').value !== '') changeSteps(n, true); };
 
 // Simple accelerometer pedometer (peak detection)
 let pedoOn = false, lastMag = 0, lastStep = 0, avg = 9.8;
@@ -1065,7 +1087,7 @@ function aiContext() {
     fasting: S.fast ? { hours: +h.toFixed(1), goalHours: S.fast.goal, type: S.fast.type, stage: st.name, kcalBurned: n.kcal, fatGrams: n.fatG, reason: S.fast.reason || null } : null,
     weightKg: +kg().toFixed(1), goalKg: S.profile?.goal, startKg: S.weights[0]?.kg,
     waterToday: S.water?.goal ? `${(waterTotal() / 1000).toFixed(2)} of ${S.water.goal / 1000} L` : null,
-    stepsToday: day().steps, workoutsToday: prog ? `${prog.done} of ${prog.total} done` : null,
+    stepsToday: day().steps, eatenTodayKcal: day().intake || 0, burnedTodayKcal: Math.round(burnToday().total), vip: isVip(), workoutsToday: prog ? `${prog.done} of ${prog.total} done` : null,
     vision: (v.why || v.inspo || v.keep) ? { why: v.why, inspo: v.inspo, keepGoing: v.keep } : null
   };
 }

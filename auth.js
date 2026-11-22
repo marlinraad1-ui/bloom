@@ -67,7 +67,8 @@ async function afterLogin(isNew) {
   // start fresh for this account, then load its profile from the server
   S.community = { name: '', avatar: '🌸', photo_url: null, bio: '', show_weight: true, blocked: S.community?.blocked || [] };
   const { data: prof } = await sb.from('profiles').select('*').eq('id', me).maybeSingle();
-  if (prof) Object.assign(S.community, { name: prof.name, avatar: prof.avatar, photo_url: prof.photo_url, bio: prof.bio || '', show_weight: prof.show_weight, is_dev: prof.is_dev });
+  if (prof) Object.assign(S.community, { name: prof.name, avatar: prof.avatar, photo_url: prof.photo_url, bio: prof.bio || '', show_weight: prof.show_weight, is_dev: prof.is_dev, vip_until: prof.vip_until, banner: prof.banner, name_fx: prof.name_fx, ring: prof.ring });
+  applyTheme();
   save();
   if (liveChannel) { sb.removeChannel(liveChannel); liveChannel = null; }
   celebrate(); toast(isNew ? 'Welcome to Bloom! 🌸' : 'Welcome back! 💖');
