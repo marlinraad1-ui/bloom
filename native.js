@@ -51,6 +51,19 @@
     });
     addPlan(S.today.items, 0, 2000);
     const tpl = S.templates[S.templateId]; if (tpl) addPlan(tpl.items.map(x => ({ ...x, notify: true })).concat(waterItems()), 1, 2500);
+    // workout program: tomorrow's 2 sessions + midnight call-out if today isn't done
+    if (S.program?.active && typeof sessionsFor === 'function') {
+      const tk = new Date(); tk.setDate(tk.getDate() + 1);
+      addPlan(sessionsFor(todayKey(tk)).map(s => ({ time: s.time, title: `🏋️ ${s.slot === 'am' ? 'Workout 1' : 'Workout 2'}: ${s.w.name}`, why: `${s.w.min} min. 2 a day is the deal.`, alarm: true, notify: true })), 1, 2600);
+      const t = todayWorkouts();
+      if (t && t.done < 2) {
+        const evil = S.persona === 'evil', left = 2 - t.done;
+        const last = new Date(); last.setHours(22, 30, 0, 0);
+        if (last.getTime() > now) out.push({ id: 3200, title: '🏋️ Last chance today', body: evil ? `${left} workout${left > 1 ? 's' : ''} still open. Midnight is coming for you 😈` : `${left} workout${left > 1 ? 's' : ''} left. You can still do it before midnight 💪`, schedule: { at: last, allowWhileIdle: true }, channelId: 'alarms' });
+        const mid = new Date(); mid.setDate(mid.getDate() + 1); mid.setHours(0, 5, 0, 0);
+        out.push({ id: 3201, title: evil ? '😈 You skipped your workouts' : '🥺 You missed your workouts', body: 'Are you serious about losing weight? Open Bloom and answer.', schedule: { at: mid, allowWhileIdle: true }, channelId: 'alarms' });
+      }
+    }
     // end of day water check (today if goal not reached, and tomorrow)
     if (S.water?.goal) for (let k = 0; k < 2; k++) {
       const d = new Date(); d.setDate(d.getDate() + k); const [h, m] = (S.water.to || '21:00').split(':').map(Number); d.setHours(h, m + 30, 0, 0);

@@ -526,3 +526,78 @@ img.avatar { object-fit: cover; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+.msg.typing { display: flex; gap: 4px; padding: 14px 16px; }
+.msg.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: typing 1.2s infinite; }
+.msg.typing i:nth-child(2) { animation-delay: .15s; } .msg.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+/* ===================== GODDESS THEME ===================== */
+[data-theme="goddess"] {
+  --bg: #f7f3ea; --bg2: radial-gradient(1200px 700px at 50% -20%, #fffaf0 0%, #f3ecdc 55%, #e9dfc8 100%);
+  --card: #fffdf8e8; --text: #3a2e1d; --muted: #8b7a5c; --accent: #c9a227; --accent2: #e8c766; --accent3: #9fb7a7;
+  --ring-bg: #efe6d0; --border: #e6d9b8; --shadow: 0 10px 34px rgba(150, 118, 40, .18), inset 0 1px 0 rgba(255,255,255,.8); --radius: 20px;
+  --font: 'Lora', Georgia, serif; --head: 'Cinzel', Georgia, serif; --btn-text: #2b2210;
+  --danger: #b5483b; --good: #6f9a6a; --bubble-me: #f3e4b8; --bubble-bot: #fbf6ea;
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='none' stroke='%23c9a227' stroke-opacity='.16' stroke-width='1.5'%3E%3Cpath d='M20 200c30-10 50-40 60-80M30 188c-8-6-10-14-6-20 8 2 10 10 6 20zM44 172c-9-4-12-12-9-19 8 3 11 11 9 19zM56 154c-9-3-13-11-11-18 8 2 12 10 11 18zM66 134c-9-1-14-9-13-16 8 1 13 9 13 16z'/%3E%3Cpath d='M150 60c20 20 50 25 75 15M160 58c4-9 12-12 19-9-2 8-10 12-19 9zM178 70c3-9 11-13 18-11-1 8-9 12-18 11zM198 76c2-9 10-14 17-13 0 8-8 13-17 13z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23d8cbb0' stroke-opacity='.45' stroke-width='1'%3E%3Cpath d='M0 110c40-6 60 14 100 4s70-26 140-10'/%3E%3Cpath d='M0 140c50 10 80-12 120-6s60 22 120 8' stroke-opacity='.25'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-theme="goddess"] .card { border: 1px solid #e3cf94; background-image: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,250,235,.3)); }
+[data-theme="goddess"] .card::before { content: ""; position: absolute; left: 14px; right: 14px; top: 6px; height: 6px; opacity: .55; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6'%3E%3Cpath d='M0 5h4V1h8v4H8V3' fill='none' stroke='%23c9a227' stroke-width='1'/%3E%3C/svg%3E") repeat-x; }
+[data-theme="goddess"] .card { position: relative; }
+[data-theme="goddess"] .btn:not(.ghost) { background: linear-gradient(135deg, #e8c766, #c9a227 55%, #a8841a); box-shadow: 0 4px 14px rgba(201, 162, 39, .35); }
+[data-theme="goddess"] .hello { font-family: 'Cinzel Decorative', 'Cinzel', serif; }
+[data-theme="goddess"] h3, [data-theme="goddess"] h2 { letter-spacing: .04em; }
+[data-theme="goddess"] .tabbar { border-top: 1px solid #e3cf94; }
+
+/* ===================== MOVING BACKGROUND ===================== */
+#bgfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#bgfx b { position: absolute; width: 55vmax; height: 55vmax; border-radius: 50%; filter: blur(70px); opacity: .32; mix-blend-mode: normal; will-change: transform; }
+#bgfx b:nth-child(1) { background: var(--accent); top: -20vmax; left: -15vmax; animation: drift1 22s ease-in-out infinite alternate; }
+#bgfx b:nth-child(2) { background: var(--accent2); bottom: -25vmax; right: -20vmax; animation: drift2 26s ease-in-out infinite alternate; }
+#bgfx b:nth-child(3) { background: var(--accent3); top: 35%; left: 40%; width: 35vmax; height: 35vmax; opacity: .2; animation: drift3 30s ease-in-out infinite alternate; }
+@keyframes drift1 { to { transform: translate(30vw, 25vh) scale(1.15); } }
+@keyframes drift2 { to { transform: translate(-25vw, -30vh) scale(1.2); } }
+@keyframes drift3 { to { transform: translate(-30vw, 20vh) scale(.85); } }
+[data-theme="simple"] #bgfx { display: none; }
+[data-theme="dark"] #bgfx b, [data-theme="galaxy"] #bgfx b, [data-theme="neon"] #bgfx b { opacity: .22; }
+/* floating sparkles */
+#bgfx i { position: absolute; bottom: -10px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 10px var(--accent2); opacity: 0; animation: rise linear infinite; }
+@keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 10% { opacity: .9; } 90% { opacity: .7; } 100% { transform: translateY(-105vh) scale(1.1); opacity: 0; } }
+body::before { z-index: 0; }
+
+/* ===================== GLOWING TEXT ===================== */
+.hello { background: linear-gradient(100deg, var(--text) 0%, var(--accent) 30%, var(--accent2) 50%, var(--accent) 70%, var(--text) 100%); background-size: 250% auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s linear infinite; }
+@keyframes shimmer { to { background-position: -250% center; } }
+.glow-text, .ring-time, .stage-title { text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+.ring-time { animation: timeGlow 3s ease-in-out infinite; }
+@keyframes timeGlow { 50% { text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 70%, transparent); } }
+.hype { position: relative; overflow: hidden; }
+.hype::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); transform: translateX(-100%); animation: sweep 4.5s ease-in-out infinite 1s; }
+@keyframes sweep { 60%, 100% { transform: translateX(100%); } }
+
+/* ===================== PROGRAM ===================== */
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 8px 0; }
+.wday { text-align: center; border-radius: 12px; padding: 6px 0; background: var(--bg); border: 1.5px solid var(--border); font-size: .72rem; }
+.wday b { display: block; font-size: 1rem; }
+.wday.full { background: var(--good); color: #fff; border-color: var(--good); }
+.wday.half { background: color-mix(in srgb, var(--accent2) 40%, var(--bg)); }
+.wday.miss { background: color-mix(in srgb, var(--danger) 18%, var(--bg)); color: var(--danger); }
+.wday.today { outline: 2.5px solid var(--accent); }
+.wday.before { opacity: .45; }
+.streak { font-weight: 900; color: var(--accent); margin: 4px 0; }
+.session { display: grid; grid-template-columns: 74px 1fr auto; gap: 10px; align-items: center; padding: 10px; margin-top: 8px; border-radius: 16px; background: var(--bg); border: 1px solid var(--border); transition: transform .2s; }
+.session.done { opacity: .65; }
+.session.done .s-main b { text-decoration: line-through; }
+.s-time { font-size: .72rem; color: var(--muted); }
+.s-time b { font-size: 1rem; color: var(--text); }
+.s-check { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--good); color: #fff; font-weight: 900; animation: popIn .5s; }
+
+/* ===================== SHAME ===================== */
+.shame { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.shame-face { font-size: 4.5rem; animation: shake .6s 2; }
+.shame.evil .shame-face { filter: drop-shadow(0 0 14px #ff3b6b); }
+.shame-line { font-size: 1.1rem; font-weight: 800; }
+.shame h2 { font-size: 1.6rem; margin: 4px 0 10px; }
+.shame-btns { display: grid; gap: 8px; width: 100%; }
+.hello .mascot { color: var(--text); -webkit-text-fill-color: currentColor; background: none; display: inline-block; animation: bob 2.4s ease-in-out infinite; }

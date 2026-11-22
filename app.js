@@ -108,6 +108,7 @@ const THEMES = {
   peach:  { name: 'Peach Sunset', desc: 'Warm peach, orange and golden sun', mascot: '🍑', color: '#ff8a5c', bg: 'linear-gradient(135deg,#fff3ea,#ffe0cc)', fg: '#7a3418', font: "'Pacifico'" },
   galaxy: { name: 'Galaxy', desc: 'Deep space, stars and planets', mascot: '🪐', color: '#1a1033', bg: 'linear-gradient(135deg,#140c2e,#2a1650)', fg: '#c9b6ff', font: "'Orbitron'" },
   neon:   { name: 'K-pop Neon', desc: 'Concert lights, hot pink and cyan', mascot: '🎤', color: '#0b0b12', bg: 'linear-gradient(135deg,#0b0b12,#1a0b1f)', fg: '#ff4fd8', font: "'Bungee'" },
+  goddess: { name: 'Greek Goddess', desc: 'White marble, gold and laurel. Divine.', mascot: '🏛️', color: '#c9a227', bg: 'linear-gradient(135deg,#fffaf0,#efe4c8)', fg: '#6b5320', font: "'Cinzel'" },
   simple: { name: 'Simple', desc: 'Clean, no distractions', mascot: '', color: '#2563eb', bg: '#fff', fg: '#1d2430', font: 'system-ui' }
 };
 const theme = () => THEMES[S.theme] || THEMES.kawaii;
@@ -658,7 +659,7 @@ function ensureToday() {
   const k = todayKey();
   if (!S.today || S.today.date !== k) {
     const tpl = S.templates[S.templateId] || S.templates.free;
-    S.today = { date: k, items: tpl.items.map(x => ({ ...x, id: uid(), done: false, notify: true, fired: false })).concat(newWaterItems()) };
+    S.today = { date: k, items: tpl.items.map(x => ({ ...x, id: uid(), done: false, notify: true, fired: false })).concat(newWaterItems()).concat(typeof programItems === 'function' ? programItems().map(x => ({ ...x, id: uid(), done: false, fired: minutes(x.time) < nowMin() - 5 })) : []) };
     syncWaterItems(); save();
   }
 }
@@ -691,6 +692,7 @@ $('#taskList').addEventListener('click', e => {
   const id = btn.closest('.task').dataset.id, it = S.today.items.find(x => x.id === id);
   const act = btn.dataset.act;
   if (act === 'done' && it.water) return toggleWaterItem(it);
+  if (act === 'done' && it.prog) { it.done = !it.done; progDay()[it.prog] = it.done; if (it.done) toast(cheer()); save(); renderPlan(); renderProgram(); return; }
   if (act === 'done') { it.done = !it.done; if (it.done) { toast(cheer()); if (S.today.items.every(i => i.done)) celebrate(); } }
   if (act === 'alarm') it.alarm = !it.alarm;
   if (act === 'notify') it.notify = !it.notify;
@@ -975,6 +977,7 @@ function renderWorkouts() {
 function logWorkout(w, min) {
   day().workouts.push({ name: w.name, min: Math.round(min), kcal: workoutKcal(w, min), at: Date.now() });
   save(); renderWorkouts(); renderGlance(); toast(`+${Math.round(workoutKcal(w, min))} kcal burned 🔥`);
+  if (window.markSessionDone && S.program?.active) { markSessionDone(); renderPlan(); return; }
   const it = S.today?.items.find(i => !i.done && /workout/i.test(i.title)); if (it) { it.done = true; save(); renderPlan(); }
 }
 function logWorkoutAsk(w) {
@@ -1047,19 +1050,50 @@ function renderChat() {
   if (!S.chat.length) S.chat.push({ who: 'bot', text: mochiHello() });
   $('#chatLog').innerHTML = S.chat.slice(-60).map(m => `<div class="msg ${m.who} ${m.alert ? 'alert' : ''}">${esc(m.text)}${m.call ? `<br><a class="callbtn" href="tel:${esc(S.settings.emergency)}">📞 Call emergency ${esc(S.settings.emergency)}</a>` : ''}</div>`).join('');
   const last = [...S.chat].reverse().find(m => m.who === 'bot');
-  const q = last?.quick || ['I feel great', 'Hungry', 'Want to break my fast', 'Dizzy', 'Motivate me', 'What\'s happening in my body?'];
+  const q = last?.quick || ['Motivate me', "I'm hungry", 'I want to quit', 'I feel dizzy', "What's happening in my body?", 'Roast me 😈'];
   $('#quickReplies').innerHTML = q.map(x => `<button>${esc(x)}</button>`).join('');
   $('#quickReplies').querySelectorAll('button').forEach(b => b.onclick = () => sendChat(b.textContent));
   $('#chatLog').scrollTop = 1e9;
 }
-function sendChat(text) {
+// live data the AI uses to make replies personal
+function aiContext() {
+  const h = fastHours(), n = hypeNums(), st = S.fast ? stageFor(h) : null, v = S.vision || {};
+  const prog = typeof todayWorkouts === 'function' ? todayWorkouts() : null;
+  return {
+    name: S.profile?.name || null, time: new Date().toLocaleString(), emergency: S.settings.emergency,
+    fasting: S.fast ? { hours: +h.toFixed(1), goalHours: S.fast.goal, type: S.fast.type, stage: st.name, kcalBurned: n.kcal, fatGrams: n.fatG, reason: S.fast.reason || null } : null,
+    weightKg: +kg().toFixed(1), goalKg: S.profile?.goal, startKg: S.weights[0]?.kg,
+    waterToday: S.water?.goal ? `${(waterTotal() / 1000).toFixed(2)} of ${S.water.goal / 1000} L` : null,
+    stepsToday: day().steps, workoutsToday: prog ? `${prog.done} of ${prog.total} done` : null,
+    vision: (v.why || v.inspo || v.keep) ? { why: v.why, inspo: v.inspo, keepGoing: v.keep } : null
+  };
+}
+const SAFETY_LISTS = () => [RED_FLAGS, SICK, ED, MEDICAL, SAD];
+let aiDown = 0;
+async function aiReply() {
+  if (Date.now() < aiDown || !navigator.onLine || typeof commInit !== 'function') return null;
+  try {
+    if (!(await commInit())) return null;
+    const call = sb.functions.invoke('mochi', { body: { persona: S.persona, messages: S.chat.slice(-16).map(m => ({ who: m.who, text: m.text })), context: aiContext() } });
+    const r = await Promise.race([call, new Promise(res => setTimeout(() => res({ error: 'timeout' }), 15000))]);
+    if (r.error || !r.data?.text) { aiDown = Date.now() + 60000; return null; }
+    return r.data.text.replace(/\s*[—–]\s*/g, ', ');
+  } catch (e) { aiDown = Date.now() + 60000; return null; }
+}
+async function sendChat(text) {
   if (!text.trim()) return;
+  const t = text.toLowerCase();
   S.chat.push({ who: 'me', text }); renderChat();
-  setTimeout(() => {
-    buddyReply(text, chatCtx()).forEach(r => S.chat.push({ who: 'bot', ...r }));
-    S.chat = S.chat.slice(-120); save(); renderChat();
-    if (S.fast && anyMatch(QUIT, text.toLowerCase()) && ![RED_FLAGS, SICK, SAD, ED, MEDICAL].some(l => anyMatch(l, text.toLowerCase()))) setTimeout(() => showVision({ breaking: true, onStop: endFastConfirm }), 1800);
-  }, 500);
+  $('#chatLog').insertAdjacentHTML('beforeend', '<div class="msg bot typing" id="typing"><i></i><i></i><i></i></div>'); $('#chatLog').scrollTop = 1e9;
+  // safety first: health and emotional cues always get the tested built-in replies
+  const sensitive = SAFETY_LISTS().some(l => anyMatch(l, t)) || /still bad|not better|worse|i fainted/.test(t);
+  const ai = sensitive ? null : await aiReply();
+  if (!ai) await new Promise(r => setTimeout(r, 500));
+  $('#typing')?.remove();
+  if (ai) S.chat.push({ who: 'bot', text: ai, ai: true });
+  else buddyReply(text, chatCtx()).forEach(r => S.chat.push({ who: 'bot', ...r }));
+  S.chat = S.chat.slice(-120); save(); renderChat();
+  if (S.fast && anyMatch(QUIT, t) && !sensitive) setTimeout(() => showVision({ breaking: true, onStop: endFastConfirm }), 2200);
 }
 $('#chatForm').onsubmit = e => { e.preventDefault(); sendChat($('#chatInput').value); $('#chatInput').value = ''; };
 $('#chatMic').onclick = () => listen(t => sendChat(t));
@@ -1069,16 +1103,16 @@ $('#switchMochi').onclick = personaModal;
 function renderHeader() {
   const h = new Date().getHours(), n = S.profile?.name;
   const g = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  $('#hello').textContent = `${g}${n ? ', ' + n : ''}${theme().mascot ? ' ' + theme().mascot : ''}`;
+  $('#hello').innerHTML = `${esc(g)}${n ? ', ' + esc(n) : ''}${theme().mascot ? ` <span class="mascot">${theme().mascot}</span>` : ''}`;
   $('#todayLabel').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
 }
-function renderAll() { applyTheme(); renderHeader(); if (window.renderVisionCard) renderVisionCard(); $('#stageCard').dataset.hr = ''; $('#fastControls').innerHTML = ''; renderFast(); renderPlan(); renderGlance(); renderSteps(); renderWorkouts(); renderBody(); notifState(); }
+function renderAll() { applyTheme(); renderHeader(); if (window.renderVisionCard) renderVisionCard(); if (window.renderProgram) renderProgram(); $('#stageCard').dataset.hr = ''; $('#fastControls').innerHTML = ''; renderFast(); renderPlan(); renderGlance(); renderSteps(); renderWorkouts(); renderBody(); notifState(); }
 
 let lastMinute = -1;
 setInterval(() => {
   renderFast(); checkFastHour();
   const m = new Date().getMinutes();
-  if (m !== lastMinute) { lastMinute = m; checkReminders(); renderNext(); renderHeader(); photoReminder(); waterEndCheck(); }
+  if (m !== lastMinute) { lastMinute = m; checkReminders(); renderNext(); renderHeader(); photoReminder(); waterEndCheck(); if (window.eveningNag) { eveningNag(); midnightCheck(); } }
 }, 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkReminders(); renderAll(); } });
 

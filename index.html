@@ -9,10 +9,11 @@
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Playfair+Display:wght@600;800&family=Inter:wght@400;600;800&family=Quicksand:wght@500;700&family=Fredoka:wght@400;600;700&family=Poppins:wght@400;600;800&family=Pacifico&family=Space+Grotesk:wght@400;600;700&family=Orbitron:wght@600;800&family=Bungee&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Playfair+Display:wght@600;800&family=Inter:wght@400;600;800&family=Quicksand:wght@500;700&family=Fredoka:wght@400;600;700&family=Poppins:wght@400;600;800&family=Pacifico&family=Space+Grotesk:wght@400;600;700&family=Orbitron:wght@600;800&family=Bungee&family=Cinzel:wght@500;700;900&family=Cinzel+Decorative:wght@700&family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div id="bgfx" aria-hidden="true"><b></b><b></b><b></b><i style="left:8%;animation-duration:14s;animation-delay:0s"></i><i style="left:22%;animation-duration:18s;animation-delay:3s"></i><i style="left:37%;animation-duration:16s;animation-delay:7s"></i><i style="left:55%;animation-duration:20s;animation-delay:1s"></i><i style="left:68%;animation-duration:15s;animation-delay:5s"></i><i style="left:81%;animation-duration:19s;animation-delay:9s"></i><i style="left:92%;animation-duration:17s;animation-delay:2s"></i><i style="left:46%;animation-duration:22s;animation-delay:11s"></i></div>
 <div id="app">
   <header class="topbar">
     <div>
@@ -141,6 +142,7 @@
 
     <!-- MOVE -->
     <section class="view" id="view-move">
+      <div class="card program" id="programCard"></div>
       <div class="card">
         <h3>Steps</h3>
         <div class="steps-big"><span id="stepCount">0</span><small> / <span id="stepGoal">20000</span></small></div>
@@ -230,6 +232,7 @@
 <script src="data.js"></script>
 <script src="chat.js"></script>
 <script src="app.js"></script>
+<script src="program.js"></script>
 <script src="vision.js"></script>
 <script src="community.js"></script>
 <script src="friends.js"></script>
