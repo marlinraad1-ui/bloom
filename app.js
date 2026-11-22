@@ -165,6 +165,7 @@ function profileForm(first) {
       <div class="field"><label>Emergency number</label><input id="pEmerg" value="${esc(S.settings.emergency)}"></div>
     </div>
     ${first ? '' : `<div class="field"><label>Fasting messages</label>${msgEverySeg()}</div>
+    ${window.Capacitor?.isNativePlatform?.() ? '' : '<div class="field"><a class="btn ghost" href="install.html" style="display:block;text-align:center;text-decoration:none">📲 Get the Android app / install on iPhone</a></div>'}
     <div class="field"><button type="button" class="btn ghost" id="pWater">💧 Water goal: ${S.water?.goal ? S.water.goal / 1000 + ' L' : 'not set'}</button></div>`}
     <div class="warnbox">Fasting isn't safe for everyone. Please talk to a doctor first if you are pregnant/breastfeeding, under 18, have diabetes, heart or kidney problems, take medication, or have a history of eating disorders.</div>
     <button class="btn big" id="pSave">${first ? 'Calculate & start 🌱' : 'Save'}</button>
