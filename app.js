@@ -1075,7 +1075,7 @@ async function aiReply() {
   try {
     if (!(await commInit())) return null;
     const call = sb.functions.invoke('mochi', { body: { persona: S.persona, messages: S.chat.slice(-16).map(m => ({ who: m.who, text: m.text })), context: aiContext() } });
-    const r = await Promise.race([call, new Promise(res => setTimeout(() => res({ error: 'timeout' }), 15000))]);
+    const r = await Promise.race([call, new Promise(res => setTimeout(() => res({ error: 'timeout' }), 25000))]);
     if (r.error || !r.data?.text) { aiDown = Date.now() + 60000; return null; }
     return r.data.text.replace(/\s*[—–]\s*/g, ', ');
   } catch (e) { aiDown = Date.now() + 60000; return null; }

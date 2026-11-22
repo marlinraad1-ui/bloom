@@ -3,7 +3,7 @@
 // Safety: the app checks emergency words BEFORE calling this, and the
 // system prompt below repeats the safety rules for the AI.
 
-const MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-flash-latest';
+const MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-flash-lite-latest';
 const KEY = Deno.env.get('GEMINI_API_KEY') || '';
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -50,19 +50,25 @@ Deno.serve(async (req) => {
     while (history.length && history[0].role !== 'user') history.shift();
     if (!history.length) return new Response(JSON.stringify({ error: 'empty' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KEY },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemPrompt(p) }] },
-        contents: history,
-        generationConfig: { temperature: 1.0, maxOutputTokens: 1024 },
-      }),
-    });
-    const j = await r.json();
-    const text = (j?.candidates?.[0]?.content?.parts || []).map((x: { text?: string }) => x.text || '').join('').trim();
-    if (!r.ok || !text) return new Response(JSON.stringify({ error: 'ai_failed', status: r.status }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
-    return new Response(JSON.stringify({ text }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+    const models = [MODEL, 'gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'].filter((m, i, a) => a.indexOf(m) === i);
+    let lastErr = '', lastStatus = 0;
+    for (const model of models) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KEY },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt(p) }] },
+          contents: history,
+          generationConfig: { temperature: 1.0, maxOutputTokens: 1024 },
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      const text = (j?.candidates?.[0]?.content?.parts || []).map((x: { text?: string }) => x.text || '').join('').trim();
+      if (r.ok && text) return new Response(JSON.stringify({ text, model }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      lastStatus = r.status; lastErr = `${model}: ${j?.error?.status || ''} ${j?.error?.message || (r.ok ? 'empty reply' : '')}`.slice(0, 300);
+      if (r.status === 400 || r.status === 401 || r.status === 403) break; // key problem, other models won't help
+    }
+    return new Response(JSON.stringify({ error: 'ai_failed', status: lastStatus, detail: lastErr }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (_e) {
     return new Response(JSON.stringify({ error: 'bad_request' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
