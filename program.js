@@ -24,7 +24,8 @@ function sessionsFor(dateKey) {
     let ids = W_TYPE[type];
     if (p.kpop && type === 'dance') ids = ids.filter(i => i.startsWith('kp-'));
     let pool = WORKOUTS.filter(w => ids.includes(w.id) && (w.who === 'all' || !who || w.who === who) && (w.goal === 'both' || w.goal === p.goal || type === 'cardio' || type === 'dance' || type === 'recovery') && LVL[w.level] <= maxLvl && workoutKcal(w, w.min) >= 80);
-    if (!pool.length) pool = WORKOUTS.filter(w => w.level === 'simple' && workoutKcal(w, w.min) >= 80);
+    if (typeof hasGear === 'function') pool = pool.filter(w => hasGear(w) && (!S.wf.nojump || !w.jump));
+    if (!pool.length) pool = WORKOUTS.filter(w => w.level === 'simple' && !w.needs && !w.jump && workoutKcal(w, w.min) >= 80);
     const exact = pool.filter(w => LVL[w.level] === maxLvl);
     const use = exact.length ? exact : pool;
     const w = use[(idx + k * 3) % use.length];

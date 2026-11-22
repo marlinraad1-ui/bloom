@@ -116,7 +116,7 @@ const THEMES = {
   sakuranight: { name: 'Midnight Sakura', desc: 'Moonlit night with falling petals', mascot: '🌙', color: '#141a38', bg: 'linear-gradient(135deg,#141a38,#2d1d48)', fg: '#ffb3d1', font: "'Fredoka'" },
   simple: { name: 'Simple', desc: 'Clean, no distractions', mascot: '', color: '#2563eb', bg: '#fff', fg: '#1d2430', font: 'system-ui' }
 };
-const VIP_THEMES = ['ocean', 'peach', 'galaxy', 'neon', 'goddess', 'rosegold', 'sakuranight'];
+const VIP_THEMES = Object.keys(THEMES).filter(k => k !== 'kawaii'); // only Kawaii is free
 const UPCOMING_THEMES = [['🎀', 'Dollhouse Pink'], ['☁️', 'Anime Sky'], ['🖤', 'Black Diamond'], ['🦋', 'Y2K Butterfly'], ['🍒', 'Cherry Cola']];
 const theme = () => THEMES[S.theme] || THEMES.kawaii;
 function applyTheme() {
@@ -1016,7 +1016,7 @@ function playWorkout(w) {
     <div class="row gap" style="justify-content:center"><button class="btn ghost" id="pPause">⏸ Pause</button><button class="btn ghost" id="pSkip">⏭ Skip</button><button class="btn" id="pStop">Finish</button></div>
     <p class="muted small">Feeling dizzy or faint? Stop, sit down, and drink water with a pinch of salt.</p></div>`, () => {
     const draw = () => {
-      $('#pStep').textContent = `Move ${i + 1} / ${w.moves.length}`; $('#pMove').textContent = w.moves[i];
+      $('#pStep').textContent = `Move ${i + 1} / ${w.moves.length}`; if (typeof moveIcon === 'function') $('.player .move-emoji').textContent = moveIcon(w.moves[i]); $('#pMove').textContent = w.moves[i];
       $('#pTime').textContent = fmtHMS(left * 1000).slice(3); $('#pNext').textContent = w.moves[i + 1] ? 'Next: ' + w.moves[i + 1] : 'Last one!';
       $('#pProg').style.width = (elapsed / (w.min * 60) * 100) + '%'; $('#pBurn').textContent = `🔥 ${Math.round(workoutKcal(w, elapsed / 60))} kcal so far`;
     };
