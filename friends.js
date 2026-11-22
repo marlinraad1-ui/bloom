@@ -2,7 +2,7 @@
 // Add friends from their profile or by searching a name, accept requests,
 // then chat 1 on 1 (text + photos). Messages arrive live.
 
-const PCOLS = 'id, name, avatar, photo_url';
+const PCOLS = 'id, name, avatar, photo_url, is_dev';
 let friendsCache = { friends: [], incoming: [], outgoing: [], lastMsg: {}, unread: {} };
 let liveChannel = null, openChatWith = null;
 
@@ -25,7 +25,7 @@ async function loadFriends() {
     if (!f.lastMsg[other]) f.lastMsg[other] = m;
     if (m.receiver === me && !m.read_at) f.unread[other] = (f.unread[other] || 0) + 1;
   }
-  f.friends.sort((a, b) => new Date(f.lastMsg[b.id]?.created_at || 0) - new Date(f.lastMsg[a.id]?.created_at || 0));
+  f.friends.sort((a, b) => (b.is_dev - a.is_dev) || (new Date(f.lastMsg[b.id]?.created_at || 0) - new Date(f.lastMsg[a.id]?.created_at || 0)));
   friendsCache = f; updateBadges();
   return f;
 }
@@ -78,7 +78,7 @@ async function renderFriends() {
   const box = $('#friendsPanel'); if (!box) return;
   try { await loadFriends(); } catch (e) { box.innerHTML = '<p class="muted">Couldn\'t load friends.</p>'; return; }
   const f = friendsCache;
-  const row = (p, right, sub = '') => `<div class="frow" data-id="${p.id}">${avatarHTML(p)}<div class="frow-main"><b>${esc(p.name)}</b>${sub ? `<div class="muted small ellipsis">${sub}</div>` : ''}</div>${right}</div>`;
+  const row = (p, right, sub = '') => `<div class="frow" data-id="${p.id}">${avatarHTML(p)}<div class="frow-main"><b>${nameHTML(p)}</b>${sub ? `<div class="muted small ellipsis">${sub}</div>` : ''}</div>${right}</div>`;
   box.innerHTML = `
     <div class="card">
       <div class="search"><input id="fSearch" placeholder="🔎 Find people by name…" autocomplete="off"></div>
@@ -102,7 +102,7 @@ async function renderFriends() {
 async function searchPeople(q) {
   const out = $('#fResults'); if (!q) { out.innerHTML = ''; return; }
   const { data } = await sb.from('profiles').select(PCOLS).ilike('name', `%${q.replace(/[%_]/g, '')}%`).neq('id', me).limit(15);
-  out.innerHTML = (data || []).map(p => `<div class="frow" data-id="${p.id}">${avatarHTML(p)}<div class="frow-main"><b>${esc(p.name)}</b></div><span class="chip">${{ friends: '✓ friends', outgoing: '⏳ sent', incoming: '💌 wants to be friends', none: '➕' }[friendState(p.id)]}</span></div>`).join('') || '<p class="muted small">Nobody found with that name.</p>';
+  out.innerHTML = (data || []).map(p => `<div class="frow" data-id="${p.id}">${avatarHTML(p)}<div class="frow-main"><b>${nameHTML(p)}</b></div><span class="chip">${{ friends: '✓ friends', outgoing: '⏳ sent', incoming: '💌 wants to be friends', none: '➕' }[friendState(p.id)]}</span></div>`).join('') || '<p class="muted small">Nobody found with that name.</p>';
   out.querySelectorAll('.frow').forEach(r => r.onclick = () => showProfile(r.dataset.id));
 }
 
@@ -116,7 +116,7 @@ function msgHTML(m) {
 async function openChat(p) {
   openChatWith = p.id;
   openModal(`<div class="chat-sheet">
-      <div class="chat-top"><button class="linkbtn" id="dmBack">←</button>${avatarHTML(p)}<button class="who name" id="dmProf">${esc(p.name)}</button></div>
+      <div class="chat-top"><button class="linkbtn" id="dmBack">←</button>${avatarHTML(p)}<button class="who name" id="dmProf">${nameHTML(p)}</button></div>
       <div class="dm-list" id="dmList"><p class="muted small">Loading…</p></div>
       <div id="dmPrev"></div>
       <form class="chat-input" id="dmForm"><button type="button" class="iconbtn" id="dmPic">📷</button><input type="file" accept="image/*" id="dmPicIn" hidden><input id="dmText" maxlength="2000" placeholder="Message…" autocomplete="off"><button class="btn">Send</button></form>

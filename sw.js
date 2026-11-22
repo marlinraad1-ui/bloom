@@ -1,6 +1,6 @@
 // Service worker: offline cache + notification clicks
-const CACHE = 'bloom-v10';
-const FILES = ['./', './index.html', './styles.css', './data.js', './chat.js', './app.js', './program.js', './vision.js', './config.js', './community.js', './friends.js', './native.js', './manifest.json', './icon.svg'];
+const CACHE = 'bloom-v11';
+const FILES = ['./', './index.html', './styles.css', './data.js', './chat.js', './app.js', './program.js', './vision.js', './config.js', './community.js', './friends.js', './native.js', './icons.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

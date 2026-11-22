@@ -601,3 +601,28 @@ body::before { z-index: 0; }
 .shame h2 { font-size: 1.6rem; margin: 4px 0 10px; }
 .shame-btns { display: grid; gap: 8px; width: 100%; }
 .hello .mascot { color: var(--text); -webkit-text-fill-color: currentColor; background: none; display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+
+/* ===== 3D emoji icons ===== */
+img.fx { height: 1.15em; width: auto; vertical-align: -0.22em; display: inline-block; filter: drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
+.tabbar span img.fx { height: 1.7rem; vertical-align: middle; transition: transform .25s; }
+.tabbar button.active span img.fx { transform: scale(1.15) translateY(-2px); filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--accent) 60%, transparent)); }
+.topbtns .iconbtn img.fx { height: 1.45rem; }
+.ring-emoji img.fx { height: 3rem; }
+.buddy img.fx { height: 2.4rem; }
+.slide-big img.fx { height: 6rem; }
+.shame-face img.fx { height: 5.5rem; }
+.alarm-ring img.fx { height: 5rem; }
+.w-icon img.fx { height: 2.1rem; }
+.tl div img.fx { height: 1.4rem; }
+.hello .mascot img.fx { height: 1.1em; }
+
+/* ===== developer ===== */
+.dev-name { font-weight: 900; background: linear-gradient(90deg, #ffd700, #ff6ec7, #7df9ff, #ffd700); background-size: 300% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shimmer 3s linear infinite; filter: drop-shadow(0 0 6px rgba(255, 200, 80, .7)); }
+.dev-tag { font-family: 'Bungee', 'Cinzel', sans-serif; letter-spacing: .04em; }
+.dev-crown { -webkit-text-fill-color: initial; color: initial; display: inline-block; animation: bob 2s ease-in-out infinite; }
+.dev-sub { font-size: .85rem; color: var(--muted); margin: 0; }
+.post.dev-post { border: 2px solid transparent; background: linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(120deg, #ffd700, #ff6ec7, #7df9ff, #ffd700) border-box; background-size: auto, 300% 300%; animation: devBorder 6s linear infinite; box-shadow: 0 0 24px rgba(255, 200, 80, .35); }
+@keyframes devBorder { to { background-position: 0 0, 300% 0; } }
+.pin-tag { font-size: .75rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+.acct { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border); }

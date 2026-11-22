@@ -5,7 +5,12 @@
 
 const AVATARS = ['🌸', '🐰', '😈', '🔥', '💪', '🌙', '🦋', '🐻', '🍓', '⚡', '👑', '🌈', '🐱', '🐼', '🦊', '💎', '🐳', '🍵', '🍑', '🪐', '🎤'];
 let sb = null, me = null, feedBusy = false, myLikes = new Set();
-const PROFILE_COLS = 'name, avatar, photo_url, show_weight';
+const PROFILE_COLS = 'name, avatar, photo_url, show_weight, is_dev';
+const RESERVED = /(dev|stasia|admin|bloom team|moderator)/i;
+// glowing developer name, normal name for everyone else
+const nameHTML = p => p?.is_dev
+  ? `<span class="dev-name"><span class="dev-tag">DEV.</span> ${esc(p.name)} <span class="dev-crown">👑</span></span>`
+  : esc(p?.name || 'Someone');
 
 const comm = () => (S.community = S.community || { name: '', avatar: '🌸', photo_url: null, bio: '', show_weight: true, blocked: [] });
 
@@ -34,8 +39,8 @@ async function commInit() {
   // load my profile from the server (or create it from what this phone remembers)
   const { data: prof } = await sb.from('profiles').select('*').eq('id', me).maybeSingle();
   const c = comm();
-  if (prof) Object.assign(c, { name: prof.name, avatar: prof.avatar, photo_url: prof.photo_url, bio: prof.bio || '', show_weight: prof.show_weight });
-  else if (c.name) await saveProfileRemote();
+  if (prof) Object.assign(c, { name: prof.name, avatar: prof.avatar, photo_url: prof.photo_url, bio: prof.bio || '', show_weight: prof.show_weight, is_dev: prof.is_dev });
+  else if (c.name) { const r = await saveProfileRemote(); if (r.error) c.name = ''; }
   save();
   return true;
 }
@@ -57,7 +62,9 @@ function commProfile(after) {
     <div class="field"><label>Bio (optional)</label><input id="cBio" maxlength="200" value="${esc(c.bio || '')}" placeholder="e.g. 7 day fast for my faith 🙏 down 6 kg"></div>
     <div class="field"><label>Emoji (used when you have no photo)</label><div class="chips" id="cAv">${AVATARS.map(a => `<button type="button" class="chip pick ${a === av ? 'on' : ''}" data-a="${a}" style="font-size:1.3rem">${a}</button>`).join('')}</div></div>
     <label class="small toggle-row"><input type="checkbox" id="cWeight" ${c.show_weight ? 'checked' : ''}> ⚖️ Show my weight in posts</label>
-    <button class="btn big" id="cSave">Save</button>`, () => {
+    <button class="btn big" id="cSave">Save</button>
+    <div class="acct" id="acctBox"></div>`, () => {
+    renderAccountBox();
     const pic = () => { $('#cPic').innerHTML = (newPhoto || photo) ? `<img src="${newPhoto || photo}" alt="">` : `<span>${av}</span>`; };
     document.querySelectorAll('#cAv button').forEach(b => b.onclick = () => { av = b.dataset.a; document.querySelectorAll('#cAv button').forEach(x => x.classList.toggle('on', x === b)); pic(); });
     $('#cPicBtn').onclick = () => $('#cPicIn').click();
@@ -65,6 +72,7 @@ function commProfile(after) {
     if ($('#cPicX')) $('#cPicX').onclick = () => { photo = null; newPhoto = null; pic(); };
     $('#cSave').onclick = async () => {
       const n = $('#cName').value.trim(); if (!n) return toast('Pick a name first');
+      if (RESERVED.test(n) && !c.is_dev) return toast('Names with "dev" or "stasia" are reserved. Pick another one 🌸');
       const btn = $('#cSave'); btn.disabled = true; btn.textContent = 'Saving…';
       try {
         if (newPhoto) {
@@ -77,7 +85,8 @@ function commProfile(after) {
           photo = sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
         }
         Object.assign(c, { name: n, avatar: av, photo_url: photo || null, bio: $('#cBio').value.trim(), show_weight: $('#cWeight').checked });
-        const r = await saveProfileRemote(); if (r.error) throw r.error;
+        const r = await saveProfileRemote();
+        if (r.error) { btn.disabled = false; btn.textContent = 'Save'; return toast(r.error.code === '23505' ? `"${n}" is already taken. Try another name ✨` : /reserved/.test(r.error.message) ? 'That name is reserved. Pick another one 🌸' : 'Couldn\'t save. Check your internet.'); }
         save(); closeModal(); renderCommunityHead(); toast('Profile saved ✨'); (after || loadFeed)();
       } catch (e) { btn.disabled = false; btn.textContent = 'Save'; toast('Couldn\'t save. Check your internet.'); }
     };
@@ -86,7 +95,7 @@ function commProfile(after) {
 
 function renderCommunityHead() {
   const c = comm();
-  $('#commMe').innerHTML = c.name ? `<button class="me-chip" id="commEdit">${avatarHTML(c, 'sm')} <b>${esc(c.name)}</b> <span class="muted">· my profile</span></button>` : '';
+  $('#commMe').innerHTML = c.name ? `<button class="me-chip" id="commEdit">${avatarHTML(c, 'sm')} <b>${nameHTML(c)}</b> <span class="muted">· my profile</span></button>` : '';
   if ($('#commEdit')) $('#commEdit').onclick = () => showProfile(me);
   $('#postWeight').checked = !!c.show_weight;
 }
@@ -127,9 +136,9 @@ async function renderCommunity() {
 function postHTML(p) {
   const nl = p.likes?.[0]?.count || 0, nc = p.comments?.[0]?.count || 0, liked = myLikes.has(p.id), mine = p.user_id === me;
   const prof = p.profiles || { name: p.name, avatar: p.avatar };
-  return `<article class="post" data-id="${p.id}" data-user="${p.user_id}">
+  return `<article class="post ${prof.is_dev ? 'dev-post' : ''} ${p._pinned ? 'pinned' : ''}" data-id="${p.id}" data-user="${p.user_id}">${p._pinned ? '<div class="pin-tag">📌 From the developer</div>' : ''}
     <div class="post-head"><button class="who" data-act="profile">${avatarHTML(prof)}</button>
-      <div style="flex:1;min-width:0"><button class="who name" data-act="profile">${esc(prof.name)}</button><div class="muted small">${timeAgo(p.created_at)}</div></div>
+      <div style="flex:1;min-width:0"><button class="who name" data-act="profile">${nameHTML(prof)}</button><div class="muted small">${timeAgo(p.created_at)}</div></div>
       <button class="linkbtn" data-act="more">•••</button></div>
     ${p.body ? `<p class="post-body">${esc(p.body)}</p>` : ''}
     ${p.photo_url ? `<img class="post-img" src="${esc(p.photo_url)}" loading="lazy" alt="">` : ''}
@@ -148,7 +157,7 @@ async function fetchPosts(userId) {
   if (error) throw error;
   myLikes = new Set((likes || []).map(l => l.post_id));
   const blocked = comm().blocked || [];
-  return posts.filter(p => !blocked.includes(p.user_id));
+  return posts.filter(p => p.profiles?.is_dev || !blocked.includes(p.user_id));
 }
 
 async function loadFeed() {
@@ -156,7 +165,9 @@ async function loadFeed() {
   const box = $('#feed');
   if (!box.children.length) box.innerHTML = '<p class="muted">Loading…</p>';
   try {
-    const list = await fetchPosts();
+    let list = await fetchPosts();
+    const devPost = list.find(p => p.profiles?.is_dev);
+    if (devPost) list = [{ ...devPost, _pinned: true }, ...list.filter(p => p !== devPost)];
     box.innerHTML = list.map(postHTML).join('') || '<p class="muted card">No posts yet. Be the first! 🌸</p>';
   } catch (e) {
     box.innerHTML = '<p class="muted">Couldn\'t load posts. Tap refresh to try again.</p>';
@@ -172,10 +183,10 @@ async function showProfile(uid) {
     const likesGot = posts.reduce((a, x) => a + (x.likes?.[0]?.count || 0), 0);
     openModal(`<div class="prof-view">
       ${avatarHTML(p, 'xl')}
-      <h2>${esc(p.name)}</h2>
+      <h2>${nameHTML(p)}</h2>${p.is_dev ? '<p class="dev-sub">Creator of Bloom ✨ Everyone follows the developer.</p>' : ''}
       ${p.bio ? `<p>${esc(p.bio)}</p>` : ''}
       <div class="stats" style="width:100%"><div class="stat"><b>${posts.length}</b><span>posts</span></div><div class="stat"><b>${likesGot}</b><span>likes</span></div></div>
-      ${mine ? '<button class="btn" id="pvEdit">✏️ Edit my profile</button>' : `<div class="row gap wrap" style="justify-content:center">${friendButton(uid)}<button class="btn ghost" id="pvBlock">🚫 Block</button></div>`}
+      ${mine ? '<button class="btn" id="pvEdit">✏️ Edit my profile</button>' : `<div class="row gap wrap" style="justify-content:center">${friendButton(uid)}${p.is_dev ? '' : '<button class="btn ghost" id="pvBlock">🚫 Block</button>'}</div>`}
     </div>
     <div id="pvPosts" style="margin-top:12px">${posts.map(postHTML).join('') || '<p class="muted small">No posts yet.</p>'}</div>
     <button class="btn ghost big" style="margin-top:8px" onclick="closeModal()">Close</button>`, m => {
@@ -212,7 +223,7 @@ async function postClick(e) {
     const mine = uid === me;
     openModal(`<h2>Post options</h2><div class="theme-pick">
       <button id="mProf">👤 View profile</button>
-      ${mine ? '<button id="mDel">🗑️ Delete my post</button>' : '<button id="mBlock">🚫 Block this person</button>'}
+      ${mine ? '<button id="mDel">🗑️ Delete my post</button>' : post.classList.contains('dev-post') ? '' : '<button id="mBlock">🚫 Block this person</button>'}
       <button onclick="closeModal()">Cancel</button></div>`, () => {
       $('#mProf').onclick = () => showProfile(uid);
       if ($('#mBlock')) $('#mBlock').onclick = () => blockUser(uid);
@@ -240,7 +251,7 @@ async function openComments(postId) {
     const load = async () => {
       const { data } = await sb.from('comments').select(`*, profiles(${PROFILE_COLS})`).eq('post_id', postId).order('created_at').limit(200);
       const blocked = comm().blocked || [];
-      $('#cList').innerHTML = (data || []).filter(c => !blocked.includes(c.user_id)).map(c => { const p = c.profiles || c; return `<div class="comment">${avatarHTML(p)}<div><b>${esc(p.name)}</b> <span class="muted small">${timeAgo(c.created_at)}</span><div>${esc(c.body)}</div></div></div>`; }).join('') || '<p class="muted small">No comments yet.</p>';
+      $('#cList').innerHTML = (data || []).filter(c => !blocked.includes(c.user_id)).map(c => { const p = c.profiles || c; return `<div class="comment">${avatarHTML(p)}<div><b>${nameHTML(p)}</b> <span class="muted small">${timeAgo(c.created_at)}</span><div>${esc(c.body)}</div></div></div>`; }).join('') || '<p class="muted small">No comments yet.</p>';
     };
     load();
     $('#cForm').onsubmit = async e => {
@@ -250,6 +261,39 @@ async function openComments(postId) {
       if (r.error) toast('Comment didn\'t send'); else { load(); loadFeed(); }
     };
   });
+}
+
+// ---- keep your account: link an email so you can log in on any device ----
+async function renderAccountBox() {
+  const box = $('#acctBox'); if (!box || !sb) return;
+  const { data } = await sb.auth.getUser(); const u = data?.user;
+  if (u?.email && !u.is_anonymous) {
+    box.innerHTML = `<p class="small">🔐 Account saved as <b>${esc(u.email)}</b>. You can log in on any device.</p>`;
+    return;
+  }
+  box.innerHTML = `<h3>🔐 Keep your account</h3>
+    <p class="small muted">Right now your profile lives only on this device. Add your email to keep it forever and log in on your phone, PC or the app.</p>
+    <div class="row gap"><input type="email" id="acEmail" placeholder="you@email.com" autocomplete="email"><button class="btn" id="acSave">Save</button></div>
+    <button class="linkbtn" id="acLogin" style="margin-top:6px">I already have an account → log in</button>`;
+  $('#acSave').onclick = async () => {
+    const email = $('#acEmail').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Type a valid email');
+    const r = await sb.auth.updateUser({ email }, { emailRedirectTo: location.origin + location.pathname });
+    if (r.error) return toast(/already/.test(r.error.message) ? 'That email already has an account. Tap "log in" instead.' : 'Couldn\'t send the email. Try again later.');
+    box.innerHTML = `<p class="small">📧 Check <b>${esc(email)}</b> and tap the link to confirm. Then your account is saved.</p>`;
+  };
+  $('#acLogin').onclick = () => {
+    box.innerHTML = `<h3>🔐 Log in</h3><p class="small muted">We'll email you a login link. Open it on this device.</p>
+      <div class="row gap"><input type="email" id="acEmail2" placeholder="you@email.com" autocomplete="email"><button class="btn" id="acSend">Send link</button></div>`;
+    $('#acSend').onclick = async () => {
+      const email = $('#acEmail2').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Type a valid email');
+      const r = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+      box.innerHTML = r.error ? '<p class="small">Couldn\'t send the link. Check the email and try again.</p>' : `<p class="small">📧 Login link sent to <b>${esc(email)}</b>. Open it on this device.</p>`;
+    };
+  };
+}
+// coming back from an email login link: finish signing in right away
+if (/access_token|refresh_token|[?&]code=/.test(location.href)) {
+  commInit().then(() => { toast('🔐 You\'re logged in'); history.replaceState(null, '', location.pathname); if (curView === 'community') renderCommunity(); }).catch(() => {});
 }
 
 // ---- Composer ----
