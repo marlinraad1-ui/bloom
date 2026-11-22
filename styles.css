@@ -626,3 +626,13 @@ img.fx { height: 1.15em; width: auto; vertical-align: -0.22em; display: inline-b
 @keyframes devBorder { to { background-position: 0 0, 300% 0; } }
 .pin-tag { font-size: .75rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
 .acct { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border); }
+
+/* ===== sign up / log in ===== */
+.auth-card { text-align: center; padding: 26px 20px; }
+.auth-hero { font-size: 4rem; animation: bob 2.4s ease-in-out infinite; }
+.auth-hero img.fx { height: 5rem; }
+.auth-card h2 { margin: 6px 0; }
+.auth-form { display: grid; gap: 10px; margin: 16px 0 8px; text-align: left; }
+.auth-form input { padding: 13px 14px; border-radius: 14px; }
+.auth-links { display: grid; gap: 6px; justify-items: center; }
+.auth-note { background: color-mix(in srgb, var(--accent) 14%, var(--card)); border-radius: 14px; padding: 10px 12px; font-size: .9rem; margin-top: 10px; }

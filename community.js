@@ -52,7 +52,7 @@ async function saveProfileRemote() {
 function commProfile(after) {
   const c = comm(); let av = c.avatar, photo = c.photo_url, newPhoto = null;
   openModal(`<h2>${c.name ? 'Edit my profile' : 'Your community profile'}</h2>
-    <p class="muted small">No email, no password. Just you.</p>
+    <p class="muted small">This is how people see you in Bloom.</p>
     <div class="prof-edit">
       <div id="cPic" class="prof-pic">${photo ? `<img src="${esc(photo)}" alt="">` : `<span>${av}</span>`}</div>
       <div class="row gap wrap"><button type="button" class="btn ghost" id="cPicBtn">📷 Photo</button>${photo ? '<button type="button" class="linkbtn" id="cPicX">remove photo</button>' : ''}</div>
@@ -125,6 +125,10 @@ async function renderCommunity() {
   if (!SUPA_URL || !SUPA_KEY) { box.innerHTML = '<p class="muted">The community is being set up. Check back soon! 🌸</p>'; $('#composer').hidden = true; return; }
   if (!navigator.onLine) { box.innerHTML = '<p class="muted">You\'re offline. Connect to the internet to see the community.</p>'; return; }
   try { await commInit(); } catch (e) { box.innerHTML = `<p class="muted">Couldn't connect to the community right now. Try again in a bit.</p>`; return; }
+  // community needs a real account so nothing gets lost
+  const u = await currentUser();
+  if (!isRealUser(u)) return renderAuth('signup');
+  showAuthPanel(false);
   $('#composer').hidden = false;
   renderCommunityHead();
   if (!comm().name) return commProfile(() => { loadFeed(); startLive(); });
@@ -267,29 +271,10 @@ async function openComments(postId) {
 async function renderAccountBox() {
   const box = $('#acctBox'); if (!box || !sb) return;
   const { data } = await sb.auth.getUser(); const u = data?.user;
-  if (u?.email && !u.is_anonymous) {
-    box.innerHTML = `<p class="small">🔐 Account saved as <b>${esc(u.email)}</b>. You can log in on any device.</p>`;
-    return;
-  }
-  box.innerHTML = `<h3>🔐 Keep your account</h3>
-    <p class="small muted">Right now your profile lives only on this device. Add your email to keep it forever and log in on your phone, PC or the app.</p>
-    <div class="row gap"><input type="email" id="acEmail" placeholder="you@email.com" autocomplete="email"><button class="btn" id="acSave">Save</button></div>
-    <button class="linkbtn" id="acLogin" style="margin-top:6px">I already have an account → log in</button>`;
-  $('#acSave').onclick = async () => {
-    const email = $('#acEmail').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Type a valid email');
-    const r = await sb.auth.updateUser({ email }, { emailRedirectTo: location.origin + location.pathname });
-    if (r.error) return toast(/already/.test(r.error.message) ? 'That email already has an account. Tap "log in" instead.' : 'Couldn\'t send the email. Try again later.');
-    box.innerHTML = `<p class="small">📧 Check <b>${esc(email)}</b> and tap the link to confirm. Then your account is saved.</p>`;
-  };
-  $('#acLogin').onclick = () => {
-    box.innerHTML = `<h3>🔐 Log in</h3><p class="small muted">We'll email you a login link. Open it on this device.</p>
-      <div class="row gap"><input type="email" id="acEmail2" placeholder="you@email.com" autocomplete="email"><button class="btn" id="acSend">Send link</button></div>`;
-    $('#acSend').onclick = async () => {
-      const email = $('#acEmail2').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) return toast('Type a valid email');
-      const r = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
-      box.innerHTML = r.error ? '<p class="small">Couldn\'t send the link. Check the email and try again.</p>' : `<p class="small">📧 Login link sent to <b>${esc(email)}</b>. Open it on this device.</p>`;
-    };
-  };
+  box.innerHTML = isRealUser(u)
+    ? `<p class="small">🔐 Logged in as <b>${esc(u.email)}</b>. Your account is saved.</p><button class="btn ghost" id="acOut">Log out</button>`
+    : '';
+  if ($('#acOut')) $('#acOut').onclick = logOut;
 }
 // coming back from an email login link: finish signing in right away
 if (/access_token|refresh_token|[?&]code=/.test(location.href)) {
