@@ -21,6 +21,13 @@ function load() {
     if (!st.persona) st.persona = 'sweet';
     if (!st.wf) st.wf = { level: 'all', goal: 'loss', who: '', kpop: false };
   }
+  // v3: water now has its own goal + reminders, so take the fixed water items out of plans
+  if (!st.v3) {
+    for (const t of Object.values(st.templates || {})) {
+      t.items = (t.items || []).filter(i => !/^water\b/i.test(i.title)).map(i => ({ ...i, title: i.title.replace(/\s*\+\s*water.*$/i, '') }));
+    }
+    st.today = null; st.v3 = true;
+  }
   return st;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -67,19 +74,31 @@ function burnToday() {
 }
 
 // ================= THEME =================
+const THEMES = {
+  kawaii: { name: 'Kawaii', desc: 'Soft pastel pink, sakura petals, super cute', mascot: '🌸', color: '#ff8fb8', bg: 'linear-gradient(135deg,#fff0f6,#f3e8ff)', fg: '#5b3a4a', font: "'Nunito'" },
+  dark:   { name: 'Dark Classic', desc: 'Elegant black and gold, art deco', mascot: '✦', color: '#0d0d10', bg: '#111', fg: '#d4af37', font: "'Playfair Display'" },
+  ocean:  { name: 'Ocean', desc: 'Calm blue waves and bubbles', mascot: '🐳', color: '#2b8fd6', bg: 'linear-gradient(135deg,#e6f6ff,#cdeeff)', fg: '#0d4a74', font: "'Quicksand'" },
+  matcha: { name: 'Matcha', desc: 'Fresh green tea and leaves', mascot: '🍵', color: '#6aa84f', bg: 'linear-gradient(135deg,#f3f8ec,#e3f0d6)', fg: '#2f4a22', font: "'Fredoka'" },
+  peach:  { name: 'Peach Sunset', desc: 'Warm peach, orange and golden sun', mascot: '🍑', color: '#ff8a5c', bg: 'linear-gradient(135deg,#fff3ea,#ffe0cc)', fg: '#7a3418', font: "'Pacifico'" },
+  galaxy: { name: 'Galaxy', desc: 'Deep space, stars and planets', mascot: '🪐', color: '#1a1033', bg: 'linear-gradient(135deg,#140c2e,#2a1650)', fg: '#c9b6ff', font: "'Orbitron'" },
+  neon:   { name: 'K-pop Neon', desc: 'Concert lights, hot pink and cyan', mascot: '🎤', color: '#0b0b12', bg: 'linear-gradient(135deg,#0b0b12,#1a0b1f)', fg: '#ff4fd8', font: "'Bungee'" },
+  simple: { name: 'Simple', desc: 'Clean, no distractions', mascot: '', color: '#2563eb', bg: '#fff', fg: '#1d2430', font: 'system-ui' }
+};
+const theme = () => THEMES[S.theme] || THEMES.kawaii;
 function applyTheme() {
+  if (!THEMES[S.theme]) S.theme = 'kawaii';
   document.documentElement.dataset.theme = S.theme;
-  const tc = { kawaii: '#ff8fb8', dark: '#0d0d10', simple: '#2563eb' }[S.theme];
-  document.querySelector('meta[name=theme-color]').content = tc;
+  document.querySelector('meta[name=theme-color]').content = theme().color;
   const b = BUDDY[S.persona] || BUDDY.sweet; $('#buddyFace').textContent = b.face; $('#buddyName').textContent = b.name;
 }
 $('#themeBtn').onclick = () => openModal(`
   <h2>Choose your style</h2>
-  <div class="theme-pick">
-    <button data-t="kawaii" style="background:#ffe3ee;color:#5b3a4a">🌸 Kawaii: soft, pastel &amp; super cute</button>
-    <button data-t="dark" style="background:#111;color:#d4af37;font-family:'Playfair Display',serif">🖤 Dark Classic: elegant black &amp; gold</button>
-    <button data-t="simple" style="background:#fff;color:#1d2430">▫️ Simple: clean, no distractions</button>
-  </div>`, m => m.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { S.theme = b.dataset.t; save(); applyTheme(); renderAll(); closeModal(); }));
+  <div class="theme-grid">${Object.entries(THEMES).map(([k, t]) => `
+    <button data-t="${k}" class="theme-card ${S.theme === k ? 'on' : ''}" style="background:${t.bg};color:${t.fg}">
+      <span class="tc-art" data-theme="${k}"></span>
+      <span class="tc-name" style="font-family:${t.font},sans-serif">${t.mascot} ${t.name}</span>
+      <span class="tc-desc">${t.desc}</span>
+    </button>`).join('')}</div>`, m => m.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { S.theme = b.dataset.t; save(); applyTheme(); renderAll(); closeModal(); }));
 
 // ================= NAV =================
 document.querySelectorAll('.tabbar button').forEach(b => b.onclick = () => showView(b.dataset.view));
@@ -87,6 +106,7 @@ function showView(v) {
   document.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('active', x.dataset.view === v));
   document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
   if (v === 'body') renderBody();
+  if (v === 'plan') { renderWater(); if (!S.water?.goal && !S.waterPrompted) { S.waterPrompted = true; save(); waterGoalModal(true); } }
   if (v === 'community') renderCommunity();
   if (v === 'chat') { renderChat(); setTimeout(() => $('#chatLog').scrollTop = 1e9, 30); }
   window.scrollTo(0, 0);
@@ -113,11 +133,14 @@ function profileForm(first) {
       <div class="field"><label>Daily step goal</label><input id="pSteps" type="number" value="${S.settings.stepGoal}"></div>
       <div class="field"><label>Emergency number</label><input id="pEmerg" value="${esc(S.settings.emergency)}"></div>
     </div>
+    ${first ? '' : `<div class="field"><label>Fasting messages</label>${msgEverySeg()}</div>
+    <div class="field"><button type="button" class="btn ghost" id="pWater">💧 Water goal: ${S.water?.goal ? S.water.goal / 1000 + ' L' : 'not set'}</button></div>`}
     <div class="warnbox">Fasting isn't safe for everyone. Please talk to a doctor first if you are pregnant/breastfeeding, under 18, have diabetes, heart or kidney problems, take medication, or have a history of eating disorders.</div>
     <button class="btn big" id="pSave">${first ? 'Calculate & start 🌱' : 'Save'}</button>
     ${first ? '' : '<div class="row gap wrap" style="margin-top:12px"><button class="btn ghost" id="pExport">⬇️ Backup data</button><button class="btn ghost" id="pImport">⬆️ Restore</button><button class="btn ghost" id="pReset" style="color:var(--danger)">Reset all</button></div>'}
   `, m => {
     let sex = p.sex;
+    if (!first) { hookMsgEvery(m); $('#pWater').onclick = () => waterGoalModal(); }
     m.querySelectorAll('#pSex button').forEach(b => b.onclick = () => { sex = b.dataset.v; m.querySelectorAll('#pSex button').forEach(x => x.classList.toggle('on', x === b)); });
     $('#pSave').onclick = () => {
       const w = +$('#pWeight').value;
@@ -151,6 +174,20 @@ function showBmiIntro() {
 $('#settingsBtn').onclick = () => profileForm(false);
 
 // ================= FAST =================
+const MSG_OPTS = [[1, 'Every hour'], [4, 'Every 4 hours'], [5, 'Every 5 hours'], [24, 'Once a day']];
+const msgEvery = () => S.settings.msgEvery || 4;
+function msgEverySeg() {
+  return `<div class="seg" id="msgEvery">${MSG_OPTS.map(([v, l]) => `<button type="button" data-v="${v}" class="${msgEvery() === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+}
+function hookMsgEvery(m) {
+  m.querySelectorAll('#msgEvery button').forEach(b => b.onclick = () => {
+    S.settings.msgEvery = +b.dataset.v; save();
+    m.querySelectorAll('#msgEvery button').forEach(x => x.classList.toggle('on', x === b));
+  });
+}
+// should the fasting message for hour h be sent?
+const msgDue = h => h > 0 && h % msgEvery() === 0;
+
 function startFastModal() {
   let type = 'dirty', goal = 168;
   const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -159,23 +196,49 @@ function startFastModal() {
       ${Object.entries(FAST_TYPES).map(([k, v]) => `<button type="button" data-v="${k}" class="${k === type ? 'on' : ''}">${v.name}</button>`).join('')}</div>
       <p class="small muted" id="fTypeDesc"></p></div>
     <div class="field"><label>Goal</label><div class="seg" id="fGoal">
-      ${FAST_GOALS.map(h => `<button type="button" data-v="${h}" class="${h === goal ? 'on' : ''}">${h < 48 ? h + 'h' : h / 24 + 'd'}</button>`).join('')}</div></div>
-    <div class="field"><label>Started at (change if you started earlier)</label><input type="datetime-local" id="fStart" value="${now.toISOString().slice(0, 16)}"></div>
-    <div class="field"><label>Why are you fasting? (the buddy reminds you when it's hard)</label><input id="fReason" placeholder="e.g. religious reasons, spirituality, weight loss" value="${esc(S.lastReason || '')}"></div>
+      ${FAST_GOALS.map(h => `<button type="button" data-v="${h}" class="${h === goal ? 'on' : ''}">${h < 48 ? h + 'h' : h / 24 + 'd'}</button>`).join('')}
+      <button type="button" data-v="custom">✏️ Custom</button></div>
+      <div class="row gap" id="fCustom" hidden style="margin-top:8px">
+        <label class="small">Days (max 15)<input type="number" id="fDays" min="0" max="15" value="10"></label>
+        <label class="small">+ hours<input type="number" id="fHours" min="0" max="23" value="0"></label>
+      </div></div>
+    <div class="field"><label>Fasting messages</label>${msgEverySeg()}</div>
+    <div class="field"><label>Started at (only change this if you started earlier)</label><input type="datetime-local" id="fStart" value="${now.toISOString().slice(0, 16)}"></div>
+    <div class="field"><label>Why are you fasting? (Mochi reminds you when it's hard)</label><input id="fReason" placeholder="e.g. religious reasons, spirituality, weight loss" value="${esc(S.lastReason || '')}"></div>
     <div class="warnbox" id="fWarn"></div>
+    <label class="small" id="fLongOk" hidden style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="fLongChk" style="width:auto"> I understand fasting over 7 days is risky and should be checked by a doctor.</label>
     <button class="btn big" id="fGo">Start fasting ✨</button>`, m => {
+    let edited = false, custom = false;
+    $('#fStart').oninput = () => { edited = true; };
+    hookMsgEvery(m);
+    const readCustom = () => Math.min(360, Math.max(1, (+$('#fDays').value || 0) * 24 + (+$('#fHours').value || 0)));
     const upd = () => {
+      if (custom) goal = readCustom();
       $('#fTypeDesc').textContent = FAST_TYPES[type].desc + ' Allowed: ' + FAST_TYPES[type].allowed.join(', ');
       $('#fWarn').style.display = goal > 72 ? '' : 'none';
-      $('#fWarn').innerHTML = `Fasts longer than 3 days: take electrolytes daily (salt, potassium, magnesium), keep workouts gentle from day 3, and break the fast slowly. Fasts over 5 days are best done with a doctor's OK.`;
+      $('#fWarn').innerHTML = goal > 168
+        ? `<b>${(goal / 24).toFixed(goal % 24 ? 1 : 0)} days is a very long fast.</b> Past 7 days the risk of electrolyte problems and refeeding syndrome goes up a lot. Please get a doctor's OK, take electrolytes every day, rest a lot, and break the fast very slowly. Mochi will check on you often.`
+        : `Fasts longer than 3 days: take electrolytes daily (salt, potassium, magnesium), keep workouts gentle from day 3, and break the fast slowly. Fasts over 5 days are best done with a doctor's OK.`;
+      $('#fLongOk').hidden = goal <= 168;
     };
     m.querySelectorAll('#fType button').forEach(b => b.onclick = () => { type = b.dataset.v; m.querySelectorAll('#fType button').forEach(x => x.classList.toggle('on', x === b)); upd(); });
-    m.querySelectorAll('#fGoal button').forEach(b => b.onclick = () => { goal = +b.dataset.v; m.querySelectorAll('#fGoal button').forEach(x => x.classList.toggle('on', x === b)); upd(); });
+    m.querySelectorAll('#fGoal button').forEach(b => b.onclick = () => {
+      custom = b.dataset.v === 'custom'; $('#fCustom').hidden = !custom;
+      if (!custom) goal = +b.dataset.v;
+      m.querySelectorAll('#fGoal button').forEach(x => x.classList.toggle('on', x === b)); upd();
+    });
+    $('#fDays').oninput = $('#fHours').oninput = () => {
+      if (+$('#fDays').value > 15) $('#fDays').value = 15;
+      if (+$('#fDays').value === 15) $('#fHours').value = 0;
+      upd();
+    };
     upd();
     $('#fGo').onclick = () => {
-      const st = new Date($('#fStart').value).getTime() || Date.now();
+      if (goal > 168 && !$('#fLongChk').checked) return toast('Please tick the box first');
+      const picked = new Date($('#fStart').value).getTime();
+      const st = edited && picked ? Math.min(picked, Date.now()) : Date.now();
       S.lastReason = $('#fReason').value.trim();
-      S.fast = { type, goal, start: Math.min(st, Date.now()), reason: S.lastReason, lastHour: Math.floor((Date.now() - st) / 3600000) };
+      S.fast = { type, goal, start: st, reason: S.lastReason, lastHour: Math.floor((Date.now() - st) / 3600000) };
       save(); closeModal(); renderAll(); askNotify();
       toast('Fast started. You\'ve got this! 💪');
     };
@@ -247,7 +310,7 @@ function renderFast() {
         ${f.reason ? `<span class="chip">💭 ${esc(f.reason)}</span>` : ''}
       </div>`;
     // timeline
-    const max = Math.min(f.goal, 168), step = max > 72 ? 6 : max > 36 ? 2 : 1;
+    const max = Math.min(f.goal, 360), step = max > 168 ? 12 : max > 72 ? 6 : max > 36 ? 2 : 1;
     let tl = '';
     for (let i = 0; i <= max; i += step) {
       const st = stageFor(i + 0.01);
@@ -267,8 +330,7 @@ function checkFastHour() {
   if (h > (S.fast.lastHour ?? -1)) {
     S.fast.lastHour = h; save();
     const s = stageFor(h);
-    notify(`⏳ Hour ${h}: ${s.name} ${s.emoji}`, `${hypeFor(hypeNums())}\n${s.fact}`);
-    if (h > 0 && h % 4 === 0) setTimeout(() => notify('🩺 Body check time', 'How do you feel? Open Bloom and tap Body check. It takes 10 seconds.'), 4000);
+    if (msgDue(h)) notify(`⏳ Hour ${h}: ${s.name} ${s.emoji}`, `${hypeFor(hypeNums())}\n${s.fact}${h % 4 === 0 || msgEvery() >= 4 ? '\n🩺 Quick body check: how do you feel?' : ''}`);
     if (h === S.fast.goal) notify('🎉 Goal reached!', `You completed your ${S.fast.goal}h fast. So proud of you!`);
   }
 }
@@ -436,13 +498,124 @@ async function shareCard() {
   }
 }
 
+// ================= WATER =================
+const DRINKS = { water: '💧 Water', tea: '🍵 Tea', zero: '🥤 Zero drink', coffee: '☕ Coffee', other: '🥛 Other' };
+const waterTotal = (d = day()) => (d.drinks || []).reduce((a, x) => a + x.ml, 0);
+const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+// spread the daily goal over the drinking hours, step by step
+function waterItems() {
+  const w = S.water; if (!w?.goal) return [];
+  const from = minutes(w.from || '08:00'), to = Math.max(from + 60, minutes(w.to || '21:00'));
+  const n = Math.max(4, Math.round(w.goal / 330));
+  const each = Math.round(w.goal / n / 10) * 10;
+  let cum = 0;
+  return Array.from({ length: n }, (_, i) => {
+    const ml = i === n - 1 ? w.goal - each * (n - 1) : each; cum += ml;
+    const L = (cum / 1000).toFixed(2).replace(/\.?0+$/, '');
+    return { time: hm(Math.round((from + (to - from) * i / (n - 1)) / 15) * 15), title: `💧 Drink ${ml} ml`, why: `Step ${i + 1} of ${n}: ${L} L of ${w.goal / 1000} L by now`, water: true, ml, cum, notify: true, alarm: false };
+  });
+}
+const newWaterItems = () => waterItems().map(x => ({ ...x, id: uid(), done: false, fired: minutes(x.time) < nowMin() - 5 }));
+// tick water steps automatically from how much you really drank
+function syncWaterItems() {
+  if (!S.today) return; const t = waterTotal();
+  S.today.items.filter(i => i.water).forEach(i => { i.done = t >= i.cum; });
+}
+function refreshWaterViews() { syncWaterItems(); save(); renderWater(); renderPlan(); renderGlance(); }
+function addDrink(ml, kind = 'water', planId) {
+  const d = day(); d.drinks = d.drinks || [];
+  const before = waterTotal();
+  d.drinks.push({ at: Date.now(), ml, kind, planId });
+  refreshWaterViews();
+  const t = waterTotal(), g = S.water?.goal;
+  if (g && t >= g && before < g) { toast('💧 Water goal reached! Amazing 🎉'); notify('💧 Water goal reached!', 'You hit your water goal today. Your body says thank you.'); }
+  else toast(`+${ml} ml ${DRINKS[kind].split(' ')[0]}`);
+  if (t > 4000 && before <= 4000) openModal(`<h2>⚠️ That's a lot of water</h2><p>You've had over 4 L today. Too much water, especially while fasting, can lower your sodium and make you sick. Slow down, and add a pinch of salt if you keep drinking.</p><button class="btn big" onclick="closeModal()">Okay</button>`);
+}
+function toggleWaterItem(it) {
+  const d = day(); d.drinks = d.drinks || [];
+  if (!it.done) return addDrink(Math.max(it.ml, Math.min(it.cum - waterTotal(), it.ml * 2)), 'water', it.id);
+  const n = d.drinks.length;
+  d.drinks = d.drinks.filter(x => x.planId !== it.id);
+  if (d.drinks.length === n && n) d.drinks.pop();
+  refreshWaterViews();
+}
+function undoDrink() { const d = day(); if (!d.drinks?.length) return; const x = d.drinks.pop(); refreshWaterViews(); toast(`Removed ${x.ml} ml`); }
+function waterGoalModal(first) {
+  const sug = Math.min(4000, Math.max(2000, Math.round(kg() * 35 / 500) * 500));
+  let goal = S.water?.goal || sug;
+  const opts = [2000, 2500, 3000, 3500, 4000];
+  openModal(`<h2>💧 Daily water goal</h2>
+    <p class="muted small">${first ? 'Pick your goal first. Bloom spreads it over your day with reminders, step by step.' : 'Change your goal or your drinking hours.'}</p>
+    <div class="seg" id="wGoal">${opts.map(v => `<button type="button" data-v="${v}" class="${v === goal ? 'on' : ''}">${v / 1000} L${v === sug ? ' ⭐' : ''}</button>`).join('')}</div>
+    <p class="small muted">⭐ Suggested for your weight (about 35 ml per kg).</p>
+    <div class="row gap"><label class="small">First drink<input type="time" id="wFrom" value="${S.water?.from || '08:00'}"></label><label class="small">Last drink<input type="time" id="wTo" value="${S.water?.to || '21:00'}"></label></div>
+    <div class="warnbox">Never more than 4 L a day. Too much water, especially while fasting, can lower your sodium (hyponatremia) and be dangerous. Add a pinch of salt to some of your water on fasting days.</div>
+    <p class="small" id="wPreview"></p>
+    <button class="btn big" id="wSave">Save my water plan</button>`, m => {
+    const prev = () => { const n = Math.max(4, Math.round(goal / 330)); $('#wPreview').textContent = `That's ${n} reminders of about ${Math.round(goal / n / 10) * 10} ml each.`; };
+    m.querySelectorAll('#wGoal button').forEach(b => b.onclick = () => { goal = +b.dataset.v; m.querySelectorAll('#wGoal button').forEach(x => x.classList.toggle('on', x === b)); prev(); });
+    prev();
+    $('#wSave').onclick = () => {
+      S.water = { goal: Math.min(4000, goal), from: $('#wFrom').value || '08:00', to: $('#wTo').value || '21:00' };
+      ensureToday();
+      S.today.items = S.today.items.filter(i => !i.water).concat(newWaterItems());
+      closeModal(); refreshWaterViews();
+      toast(`💧 ${S.water.goal / 1000} L plan ready`);
+    };
+  });
+}
+function renderWater() {
+  const box = $('#waterCard'); if (!box) return;
+  if (!S.water?.goal) {
+    box.innerHTML = `<h3>💧 Water</h3><p>Set your daily water goal and Bloom reminds you step by step.</p><button class="btn" id="wSet">Set my water goal</button>`;
+    $('#wSet').onclick = () => waterGoalModal(true); return;
+  }
+  const t = waterTotal(), g = S.water.goal, pct = Math.min(100, t / g * 100);
+  const next = (S.today?.items || []).filter(i => i.water && !i.done).sort((a, b) => minutes(a.time) - minutes(b.time))[0];
+  const kinds = Object.entries((day().drinks || []).reduce((a, x) => (a[x.kind] = (a[x.kind] || 0) + x.ml, a), {}));
+  box.innerHTML = `
+    <div class="row between"><h3>💧 Water</h3><button class="linkbtn" id="wEdit">⚙️ ${g / 1000} L goal</button></div>
+    <div class="water-row">
+      <div class="bottle"><div class="bottle-fill" style="height:${pct}%"></div><span>${Math.round(pct)}%</span></div>
+      <div style="min-width:0;flex:1">
+        <div class="water-big">${(t / 1000).toFixed(2)} <small>/ ${g / 1000} L</small></div>
+        <p class="small muted">${t >= g ? '🎉 Goal reached! More is a bonus, just stay under 4 L.' : next ? `Next: <b>${next.time}</b>, drink ${next.ml} ml` : `${g - t} ml to go`}</p>
+        ${kinds.length ? `<div class="chips">${kinds.map(([k, v]) => `<span class="chip">${DRINKS[k].split(' ')[0]} ${v} ml</span>`).join('')}</div>` : ''}
+      </div>
+    </div>
+    <div class="chips" id="wKind" style="margin:10px 0 6px">${Object.entries(DRINKS).map(([k, v]) => `<button type="button" class="chip pick ${k === (S.lastDrink || 'water') ? 'on' : ''}" data-k="${k}">${v}</button>`).join('')}</div>
+    <div class="row gap wrap">${[150, 250, 330, 500].map(v => `<button class="btn ghost wadd" data-ml="${v}">+${v}</button>`).join('')}<button class="btn ghost" id="wOther">+ other</button><button class="linkbtn" id="wUndo">↩ undo</button></div>`;
+  $('#wEdit').onclick = () => waterGoalModal();
+  box.querySelectorAll('#wKind .pick').forEach(b => b.onclick = () => { S.lastDrink = b.dataset.k; save(); box.querySelectorAll('#wKind .pick').forEach(x => x.classList.toggle('on', x === b)); });
+  box.querySelectorAll('.wadd').forEach(b => b.onclick = () => addDrink(+b.dataset.ml, S.lastDrink || 'water'));
+  $('#wOther').onclick = () => openModal(`<h2>Add a drink</h2><div class="field"><label>How much (ml)</label><input type="number" id="wMl" value="200" min="10" max="2000"></div><button class="btn big" id="wAddGo">Add</button>`, () => {
+    $('#wAddGo').onclick = () => { const v = Math.min(2000, +$('#wMl').value || 0); if (v > 0) { closeModal(); addDrink(v, S.lastDrink || 'water'); } };
+  });
+  $('#wUndo').onclick = undoDrink;
+}
+// end of the drinking day: ask about drinks you forgot to add
+function waterEndCheck() {
+  const w = S.water; if (!w?.goal) return;
+  const k = todayKey(); if (S.waterAsked === k) return;
+  if (nowMin() < minutes(w.to || '21:00') + 30) return;
+  S.waterAsked = k; save();
+  const t = waterTotal(), left = w.goal - t;
+  const msg = left > 0 ? `You're at ${(t / 1000).toFixed(2)} L of ${w.goal / 1000} L. Did you drink anything you didn't add? Tea, a Cola Zero, a glass at dinner?` : `You reached your water goal today! 🎉 Did you drink anything else you didn't add?`;
+  notify('💧 Water check', msg);
+  openModal(`<h2>💧 End of day water check</h2><p>${msg}</p>
+    <div class="row gap wrap">${[150, 250, 330, 500].map(v => `<button class="btn ghost wend" data-ml="${v}">+${v} ml</button>`).join('')}</div>
+    <p class="stage-motiv">${left > 0 ? 'Every glass counts. Tomorrow you crush it 💪' : 'Hydrated and proud. Your body thanks you ✨'}</p>
+    <button class="btn big" onclick="closeModal()">All added</button>`, m => m.querySelectorAll('.wend').forEach(b => b.onclick = () => { addDrink(+b.dataset.ml, 'water'); b.textContent = '✓ added'; }));
+}
+
 // ================= PLAN / CHECKLIST =================
 function ensureToday() {
   const k = todayKey();
   if (!S.today || S.today.date !== k) {
     const tpl = S.templates[S.templateId] || S.templates.free;
-    S.today = { date: k, items: tpl.items.map(x => ({ ...x, id: uid(), done: false, notify: true, fired: false })) };
-    save();
+    S.today = { date: k, items: tpl.items.map(x => ({ ...x, id: uid(), done: false, notify: true, fired: false })).concat(newWaterItems()) };
+    syncWaterItems(); save();
   }
 }
 function minutes(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
@@ -473,6 +646,7 @@ $('#taskList').addEventListener('click', e => {
   const btn = e.target.closest('button'); if (!btn) return;
   const id = btn.closest('.task').dataset.id, it = S.today.items.find(x => x.id === id);
   const act = btn.dataset.act;
+  if (act === 'done' && it.water) return toggleWaterItem(it);
   if (act === 'done') { it.done = !it.done; if (it.done) toast(cheer()); }
   if (act === 'alarm') it.alarm = !it.alarm;
   if (act === 'notify') it.notify = !it.notify;
@@ -482,7 +656,7 @@ $('#taskList').addEventListener('click', e => {
 function cheer() {
   const k = ['Yay! Checked off 🌸', 'One step closer ✨', 'Look at you go! 💪', 'Proud of you 🫶', 'Done & dusted 🌟'];
   const d = ['Completed.', 'Well done.', 'Noted. Keep going.', 'Excellent.'];
-  const a = S.theme === 'kawaii' ? k : d; return a[Math.floor(Math.random() * a.length)];
+  const a = ['dark', 'simple'].includes(S.theme) ? d : k; return a[Math.floor(Math.random() * a.length)];
 }
 $('#templateSelect').onchange = e => {
   const v = e.target.value;
@@ -679,7 +853,8 @@ function renderGlance() {
     <div class="stat"><b>${kg().toFixed(1)}</b><span>kg · BMI ${bmi().toFixed(1)}</span></div>
     <div class="stat"><b>${d.steps.toLocaleString()}</b><span>steps / ${S.settings.stepGoal.toLocaleString()}</span></div>
     <div class="stat"><b>${Math.round(x.total)}</b><span>kcal burned today (est.)</span></div>
-    <div class="stat"><b>${tasks.filter(t => t.done).length}/${tasks.length}</b><span>plan tasks done</span></div>`;
+    <div class="stat"><b>${tasks.filter(t => t.done).length}/${tasks.length}</b><span>plan tasks done</span></div>
+    ${S.water?.goal ? `<div class="stat"><b>💧 ${(waterTotal() / 1000).toFixed(1)} L</b><span>of ${S.water.goal / 1000} L water</span></div>` : ''}`;
 }
 
 // ================= MOVE =================
@@ -848,7 +1023,7 @@ $('#switchMochi').onclick = personaModal;
 function renderHeader() {
   const h = new Date().getHours(), n = S.profile?.name;
   const g = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  $('#hello').textContent = `${g}${n ? ', ' + n : ''}${S.theme === 'kawaii' ? ' 🌸' : ''}`;
+  $('#hello').textContent = `${g}${n ? ', ' + n : ''}${theme().mascot ? ' ' + theme().mascot : ''}`;
   $('#todayLabel').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 function renderAll() { applyTheme(); renderHeader(); $('#stageCard').dataset.hr = ''; $('#fastControls').innerHTML = ''; renderFast(); renderPlan(); renderGlance(); renderSteps(); renderWorkouts(); renderBody(); notifState(); }
@@ -857,11 +1032,11 @@ let lastMinute = -1;
 setInterval(() => {
   renderFast(); checkFastHour();
   const m = new Date().getMinutes();
-  if (m !== lastMinute) { lastMinute = m; checkReminders(); renderNext(); renderHeader(); photoReminder(); }
+  if (m !== lastMinute) { lastMinute = m; checkReminders(); renderNext(); renderHeader(); photoReminder(); waterEndCheck(); }
 }, 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkReminders(); renderAll(); } });
 
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').then(r => swReg = r).catch(() => {});
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !window.Capacitor?.isNativePlatform?.()) navigator.serviceWorker.register('sw.js').then(r => swReg = r).catch(() => {});
 
 applyTheme(); renderAll();
 if (!S.profile) profileForm(true);

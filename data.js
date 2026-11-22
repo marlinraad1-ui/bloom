@@ -115,13 +115,24 @@ const STAGES = [
       'You built a new level of self discipline that carries into everything.'
     ],
     tips: ['For fasts over 5 days, it is smart to ask a doctor about refeeding.', 'First meal: small. Wait 1 to 2 hours before the next small meal.', 'Be proud. Write down how you feel right now.'] },
-  { from: 168, to: 99999, emoji: '🌈', name: 'Beyond 7 days',
-    body: 'Fasting longer than 7 days should be supervised by a doctor. Please think about breaking your fast safely.',
+  { from: 168, to: 240, emoji: '🌈', name: 'Day 7 to 10, extended fast',
+    body: 'You are past 7 days. Your body is fully running on fat, but electrolytes and rest are now critical. A doctor should know you are doing this.',
     facts: [
-      'Beyond 7 days, medical supervision is strongly recommended.',
-      'Refeeding syndrome risk rises with fast length. Break slowly and carefully.'
+      '7 days done. Very few people ever reach this. Respect.',
+      'Your body is protecting its organs and muscle. Give it rest and minerals.',
+      'Refeeding syndrome risk rises the longer you fast. The way you break this fast matters a lot.',
+      'Heart rhythm problems can come from low potassium or magnesium. Electrolytes every day.'
     ],
-    tips: ['Talk to a doctor before going on.', 'Break gently: broth, then soft protein, then small meals.'] }
+    tips: ['Electrolytes every single day: salt, potassium, magnesium.', 'Dizzy, heart racing, confused or fainting? Stop now and get help.', 'No workouts beyond slow walking.'] },
+  { from: 240, to: 99999, emoji: '🕊️', name: 'Day 10 to 15, the long road',
+    body: 'This is a very long fast. Medical supervision is strongly recommended. Listen to your body more than to any goal.',
+    facts: [
+      'Day 10 and up: only do this with a doctor checking on you.',
+      'Your mind may feel very clear, but your body is under real stress. Be gentle with it.',
+      'Breaking a fast this long should be planned with a doctor: very small portions for several days.',
+      'You have already shown incredible discipline. Ending safely is part of the win.'
+    ],
+    tips: ['Check in with Mochi often. Any warning sign means stop.', 'Plan your refeed now: broth, then soft foods, slowly over days.', 'Rest is your main job now.'] }
 ];
 
 // ================= HYPE (live numbers, changes every hour) =================
@@ -166,7 +177,9 @@ function stageFor(h) {
     motivation: MOTIVATION[Math.floor(h) % MOTIVATION.length]
   };
 }
-const hypeFor = n => HYPE[Math.floor(n.h) % HYPE.length](n);
+const hypeFor = n => n.h < 1
+  ? `Your fast has begun${n.name ? ', ' + n.name : ''}! From this minute your body starts working for you. You've got this 💪`
+  : HYPE[Math.floor(n.h) % HYPE.length](n);
 
 // ================= FAST TYPES =================
 const FAST_TYPES = {
@@ -314,31 +327,27 @@ const WORKOUTS = [
 // ================= EXAMPLE DAY PLANS =================
 const DEFAULT_TEMPLATES = {
   student: { name: '🎒 Student day', items: [
-    { time: '07:00', title: 'Wake up + water 300 ml', why: 'Starting hydrated helps you focus in class.', alarm: true },
+    { time: '07:00', title: 'Wake up', why: 'A fresh start. Your first water reminder comes right after.', alarm: true },
     { time: '07:30', title: 'Leave for school', why: 'Take your water bottle with you.', alarm: true },
-    { time: '10:00', title: 'Water between classes', why: 'Thirst often feels like hunger.', alarm: false },
     { time: '13:00', title: 'Lunch break walk', why: 'Steps + fresh air instead of the cafeteria.', alarm: false },
     { time: '15:30', title: 'Home, snack or tea', why: 'A planned break so you don\'t graze.', alarm: false },
     { time: '16:00', title: 'Homework block', why: 'Do the hard subject first while your brain is fresh.', alarm: false },
     { time: '18:00', title: 'Workout', why: 'Moving after studying resets your brain.', alarm: true },
-    { time: '20:00', title: 'Water 300 ml', why: 'Stay hydrated in the evening.', alarm: false },
     { time: '22:30', title: 'Phone away, sleep', why: 'Good sleep means fewer cravings tomorrow.', alarm: false }
   ]},
   worker: { name: '💼 Work day', items: [
     { time: '06:30', title: 'Wake up', why: 'An early start wins the day.', alarm: true },
     { time: '07:30', title: 'Leave for work', why: 'Bring your water bottle.', alarm: true },
-    { time: '10:00', title: 'Water 300 ml', why: 'Desk days make you forget to drink.', alarm: false },
     { time: '12:30', title: '15 min walk on break', why: 'Steps and a clear head for the afternoon.', alarm: false },
     { time: '15:00', title: 'Tea or coffee', why: 'Beats the afternoon slump.', alarm: false },
     { time: '17:30', title: 'Home + change clothes', why: 'Switch into evening mode.', alarm: false },
     { time: '18:30', title: 'Workout', why: 'Burns stress from work and calories.', alarm: true },
-    { time: '20:00', title: 'Water + pinch of salt', why: 'Electrolytes help on fasting days.', alarm: false },
+    { time: '20:00', title: 'Electrolytes: pinch of salt', why: 'Salt, potassium and magnesium keep you safe on fasting days.', alarm: false },
     { time: '23:00', title: 'Sleep', why: 'Recovery is part of the plan.', alarm: false }
   ]},
   free: { name: '🌤️ Free time day', items: [
-    { time: '09:30', title: 'Wake up + water', why: 'Hydrate first thing.', alarm: true },
+    { time: '09:30', title: 'Wake up', why: 'Good morning! Water reminders start soon.', alarm: true },
     { time: '10:30', title: 'Workout', why: 'Morning movement sets the mood for the day.', alarm: true },
-    { time: '12:00', title: 'Water 300 ml', why: 'Keeps headaches and fake hunger away.', alarm: false },
     { time: '14:00', title: 'Hobby time', why: 'Gaming, drawing, reading, whatever you love.', alarm: false },
     { time: '16:00', title: 'Long walk', why: 'Steps burn mostly fat when you are fasting.', alarm: true },
     { time: '18:00', title: 'Tea or zero drink', why: 'A little treat that keeps you on track.', alarm: false },

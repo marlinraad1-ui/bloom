@@ -9,7 +9,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Playfair+Display:wght@600;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Playfair+Display:wght@600;800&family=Inter:wght@400;600;800&family=Quicksand:wght@500;700&family=Fredoka:wght@400;600;700&family=Poppins:wght@400;600;800&family=Pacifico&family=Space+Grotesk:wght@400;600;700&family=Orbitron:wght@600;800&family=Bungee&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -64,6 +64,7 @@
 
     <!-- PLAN -->
     <section class="view" id="view-plan">
+      <div class="card" id="waterCard"></div>
       <div class="card">
         <div class="row between">
           <h3>Today's plan</h3>
@@ -174,6 +175,7 @@
             <button class="btn ghost" id="postPhotoBtn">📷 Photo</button>
             <input type="file" accept="image/*" id="postPhotoInput" hidden>
             <label class="small" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="postStats" checked style="width:auto"> Add my stats</label>
+            <label class="small" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="postWeight" style="width:auto"> ⚖️ Show weight</label>
             <button class="btn" id="postBtn" style="margin-left:auto">Post</button>
           </div>
         </div>
@@ -223,5 +225,6 @@
 <script src="chat.js"></script>
 <script src="app.js"></script>
 <script src="community.js"></script>
+<script src="native.js"></script>
 </body>
 </html>
