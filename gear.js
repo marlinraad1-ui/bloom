@@ -67,7 +67,7 @@ setInterval(() => document.querySelectorAll('img.ex-anim').forEach(i => { i.data
 function exerciseSheet(m, back) {
   const id = exFor(m), info = id && EX_INFO[id];
   openModal(`<div class="ex-sheet"><div class="ex-photo">${exPic(m, 'big')}</div>
-    <h2>${esc(m)}</h2>${info ? `<ol class="ex-steps">${info.s.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '<p>Follow the music and copy the moves. Big arms, soft knees, keep moving!</p>'}
+    <h2>${esc(m)}</h2>${info ? `<ol class="ex-steps">${info.s.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : (/combo|groove|freestyle|dance/i.test(m) ? '<p>Follow the music and copy the moves. Big arms, soft knees, keep moving!</p>' : '<p>Move slowly and with control. Breathe out on the hard part. Stop if anything hurts or you feel dizzy.</p>')}
     <button class="btn big" id="exBack">‹ Back to workout</button></div>`, () => { $('#exBack').onclick = back; });
 }
 const fmtMS = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
