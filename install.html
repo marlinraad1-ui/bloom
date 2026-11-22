@@ -24,6 +24,9 @@
   .btn.ghost { background: none; color: var(--text); border: 2px solid var(--border); }
   ol { padding-left: 20px; margin: 10px 0 0; line-height: 1.6; }
   .muted { color: var(--muted); font-size: .9rem; }
+  .qr-card { text-align: center; }
+  #qr { display: inline-block; padding: 14px; background: #fff; border-radius: 18px; box-shadow: 0 6px 20px rgba(91, 58, 74, .15); }
+  #qr img, #qr canvas { display: block; }
   .tag { display: inline-block; background: #e8fff3; color: #179c68; border-radius: 99px; padding: 2px 10px; font-size: .8rem; font-weight: 800; }
 </style>
 </head>
@@ -34,6 +37,12 @@
     <h1>Get Bloom</h1>
     <p class="muted">Fasting, water, workouts, Mochi and friends. Free for everyone, forever.</p>
   </div>
+
+  <section class="card qr-card" id="qrCard">
+    <h2>📱 Scan with your phone</h2>
+    <div id="qr"></div>
+    <p class="muted">Open your phone camera, point it at the code, and tap the link that pops up.</p>
+  </section>
 
   <section class="card">
     <h2>🤖 Android <span class="tag">step sync + alarms</span></h2>
@@ -62,5 +71,13 @@
     <p class="muted">In Chrome or Edge, click the install icon in the address bar to add it like an app.</p>
   </section>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // QR code that opens this download page on a phone
+  var url = 'https://marlinraad1-ui.github.io/bloom/install.html';
+  if (window.QRCode) new QRCode(document.getElementById('qr'), { text: url, width: 220, height: 220, colorDark: '#5b3a4a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  // on a phone the QR is not needed
+  if (/Android|iPhone|iPad/i.test(navigator.userAgent)) document.getElementById('qrCard').style.display = 'none';
+</script>
 </body>
 </html>
