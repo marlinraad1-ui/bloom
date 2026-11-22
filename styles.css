@@ -262,6 +262,15 @@ canvas { width: 100%; margin-top: 12px; }
 .wseg button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, transparent); }
 .theme-pick button.on { border-color: var(--accent); }
 .theme-pick button { background: var(--card); color: var(--text); }
+.photo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.photo-slot { aspect-ratio: 3/4; border: 2px dashed var(--border); border-radius: 16px; display: grid; place-items: center; text-align: center;
+  font-weight: 800; font-size: 1.1rem; color: var(--muted); cursor: pointer; background: var(--card) center/cover no-repeat; }
+.photo-slot.has { border-style: solid; border-color: var(--accent); }
+.photo-slot.has span { display: none; }
+.ph { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 14px; display: block; cursor: zoom-in; background: var(--bg); }
+.ph.empty { display: grid; place-items: center; font-size: 2rem; color: var(--muted); cursor: default; }
+.photo-day { padding: 10px 0; border-bottom: 1px dashed var(--border); display: grid; gap: 6px; }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 input[type=range] { padding: 0; accent-color: var(--accent); }
 
 @media (min-width: 900px) {

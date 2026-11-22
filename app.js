@@ -287,7 +287,21 @@ function bodyCheck() {
     <div class="field"><label>Mood: <span id="mVal">3</span>/5</label><input type="range" min="1" max="5" value="3" id="mRange"></div>
     <div class="field"><label>How does your body feel? (tap all that fit)</label>
       <div class="chips" id="symChips">${SYMPTOMS.map(s => `<button type="button" class="chip pick" data-id="${s.id}">${s.label}</button>`).join('')}</div></div>
+    <div class="field"><label>📷 Today's photos (optional, saved only on this phone)</label>
+      <div class="photo-pair">
+        <label class="photo-slot" id="slotBody"><input type="file" accept="image/*" id="fBody" hidden><span>🧍<br>Me</span></label>
+        <label class="photo-slot" id="slotScale"><input type="file" accept="image/*" id="fScale" hidden><span>⚖️<br>Scale</span></label>
+      </div>
+      <input type="number" step="0.1" id="ckKg" placeholder="Weight on the scale (kg)" style="margin-top:8px"></div>
     <button class="btn big" id="ckSave">Check me</button>`, () => {
+    const pics = {};
+    const hook = (inp, slot, key) => $(inp).onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      pics[key] = await shrinkImage(f);
+      $(slot).style.backgroundImage = `url(${pics[key]})`; $(slot).classList.add('has');
+    };
+    hook('#fBody', '#slotBody', 'body'); hook('#fScale', '#slotScale', 'scale');
+    bodyCheck.pics = pics;
     $('#eRange').oninput = e => { energy = +e.target.value; $('#eVal').textContent = energy; };
     $('#mRange').oninput = e => { mood = +e.target.value; $('#mVal').textContent = mood; };
     document.querySelectorAll('#symChips .pick').forEach(b => b.onclick = () => {
@@ -299,7 +313,10 @@ function bodyCheck() {
     $('#ckSave').onclick = () => {
       const picked = SYMPTOMS.filter(s => sel.has(s.id)), level = Math.max(0, ...picked.map(s => s.level));
       day().checks.push({ at: Date.now(), energy, mood, symptoms: picked.map(s => s.id), level, hour: S.fast ? Math.floor(fastHours()) : null });
-      save(); showCheckResult(level, picked, energy, mood); renderChecks();
+      const w = +$('#ckKg').value, pics = bodyCheck.pics || {};
+      if (w) { addWeight(w); renderGlance(); }
+      if (pics.body || pics.scale || w) savePhotos(todayKey(), { ...pics, ...(w ? { kg: w } : {}) }).then(renderPhotos);
+      save(); showCheckResult(level, picked, energy, mood); renderChecks(); if (w) renderBody();
     };
   });
 }
@@ -332,6 +349,55 @@ function showCheckResult(level, picked, energy, mood) {
     if ($('#ckEnd')) $('#ckEnd').onclick = () => { closeModal(); if (S.fast) endFast(); };
   });
 }
+// ---- Progress photos (IndexedDB, stays on this device) ----
+const PDB = {
+  db: null,
+  open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('bloom-photos', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('days', { keyPath: 'date' });
+      r.onsuccess = () => res(this.db = r.result); r.onerror = () => rej(r.error);
+    });
+  },
+  async tx(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction('days', mode); const s = t.objectStore('days'); const out = fn(s); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); }
+};
+const getPhoto = date => PDB.tx('readonly', s => s.get(date));
+const allPhotos = () => PDB.tx('readonly', s => s.getAll());
+async function savePhotos(date, data) {
+  try { const old = (await getPhoto(date)) || { date }; await PDB.tx('readwrite', s => s.put({ ...old, ...data, date })); }
+  catch (e) { toast('Could not save photos on this device'); }
+}
+function shrinkImage(file, max = 900) {
+  return new Promise(res => {
+    const img = new Image(); img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = img.width * k; c.height = img.height * k; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', 0.8));
+    }; img.src = URL.createObjectURL(file);
+  });
+}
+async function renderPhotos() {
+  let days = [];
+  try { days = (await allPhotos()).filter(d => d.body || d.scale).sort((a, b) => b.date.localeCompare(a.date)); } catch (e) {}
+  const box = $('#photoList'); if (!box) return;
+  const slot = (src, label) => src ? `<img src="${src}" alt="${label}" class="ph">` : `<div class="ph empty">${label}</div>`;
+  const first = days[days.length - 1], last = days[0];
+  $('#photoCompare').innerHTML = days.length > 1 ? `
+    <div class="compare"><div><div class="small muted">Day 1 · ${first.date}${first.kg ? ' · ' + first.kg + ' kg' : ''}</div>${slot(first.body, '🧍')}</div>
+    <div><div class="small muted">Now · ${last.date}${last.kg ? ' · ' + last.kg + ' kg' : ''}</div>${slot(last.body, '🧍')}</div></div>
+    ${first.kg && last.kg && first.kg > last.kg ? `<p class="stage-motiv" style="text-align:center">−${(first.kg - last.kg).toFixed(1)} kg. Look at that difference! 🎉</p>` : ''}` : '';
+  box.innerHTML = days.map(d => `<div class="photo-day"><div class="small"><b>${d.date}</b>${d.kg ? ' · ' + d.kg + ' kg' : ''}</div>
+    <div class="photo-pair">${slot(d.body, '🧍')}${slot(d.scale, '⚖️')}</div></div>`).join('') || '<p class="muted small">No photos yet. Add them in a body check: one of you, one of the scale. Same place, same time each day works best.</p>';
+  box.querySelectorAll('img.ph').forEach(i => i.onclick = () => openModal(`<img src="${i.src}" style="width:100%;border-radius:14px"><button class="btn big" style="margin-top:10px" onclick="closeModal()">Close</button>`));
+  $('#photoCompare').querySelectorAll('img.ph').forEach(i => i.onclick = () => openModal(`<img src="${i.src}" style="width:100%;border-radius:14px"><button class="btn big" style="margin-top:10px" onclick="closeModal()">Close</button>`));
+}
+async function photoReminder() {
+  const k = todayKey(); if (S.photoNag === k || new Date().getHours() < 9) return;
+  try { const p = await getPhoto(k); if (p && (p.body || p.scale)) return; } catch (e) { return; }
+  S.photoNag = k; save(); notify('📷 Daily photo time', 'Take a quick photo of you and the scale in your body check. Future you will love seeing the difference.');
+}
+
 function renderChecks() {
   const list = Object.entries(S.days).flatMap(([k, d]) => (d.checks || []).map(c => c)).sort((a, b) => b.at - a.at).slice(0, 10);
   const icon = l => ['🟢', '🟡', '🟠', '🔴'][l];
@@ -555,6 +621,7 @@ $('#logWeightBtn').onclick = () => {
   toast(prev && w < prev ? `−${(prev - w).toFixed(1)} kg! Amazing 🌟` : 'Logged. Progress isn\'t always a straight line 💕');
 };
 $('#bodyCheckBtn').onclick = bodyCheck;
+$('#photoAddBtn').onclick = bodyCheck;
 $('#shareBtn2').onclick = shareCard;
 $('#sleepInput').onchange = e => { day().sleep = +e.target.value || 0; save(); renderBody(); renderGlance(); };
 $('#intakeInput').onchange = e => { day().intake = +e.target.value || 0; save(); renderBody(); };
@@ -583,7 +650,7 @@ function renderBody() {
     <div class="burn-row"><span>Eaten / drunk</span><b>${Math.round(x.intake)} kcal</b></div>
     <div class="burn-row burn-total"><span>Deficit</span><span style="color:var(--good)">${Math.round(deficit)} kcal ≈ ${Math.round(deficit / 7.7)} g fat</span></div>
     <p class="muted small">Estimates (Mifflin-St Jeor + activity). 7,700 kcal ≈ 1 kg of fat. Early fasting weight loss also includes water.</p>`;
-  renderChecks();
+  renderChecks(); renderPhotos();
   $('#fastHistory').innerHTML = S.history.slice(0, 20).map(f => `<li><span>${new Date(f.start).toLocaleDateString()} · ${FAST_TYPES[f.type].name}</span><b>${fmtDur(f.hours)} ${f.hours >= f.goal ? '🏆' : ''}</b></li>`).join('') || '<li class="muted">No finished fasts yet.</li>';
 }
 function drawWeightChart() {
@@ -717,7 +784,7 @@ function playWorkout(w) {
 function playBeep() { playAlarmSound(); setTimeout(stopAlarmSound, 500); }
 
 // ================= CHAT =================
-function chatCtx() { return { persona: S.persona, hours: fastHours(), name: S.profile?.name, reason: S.fast?.reason || S.lastReason, fastType: S.fast?.type }; }
+function chatCtx() { S.chatUsed = S.chatUsed || {}; return { persona: S.persona, hours: fastHours(), kcal: S.fast ? hypeNums().kcal : 0, used: S.chatUsed, name: S.profile?.name, reason: S.fast?.reason || S.lastReason, fastType: S.fast?.type }; }
 function mochiHello() {
   const n = S.profile?.name ? ' ' + S.profile.name : '';
   return S.persona === 'evil'
@@ -743,12 +810,13 @@ function evilTerms() {
     <p>Evil Mochi uses <b>toxic motivation</b>. That means:</p>
     <ul class="small">
       <li>It can be harsh, rude and sarcastic.</li>
+      <li>It makes jokes about your fat, your excuses and your cravings.</li>
       <li>It may feel like bullying. That's on purpose, to push you.</li>
       <li>It's a joke character, not a real opinion about you.</li>
       <li>If you say you feel sick, faint, sad or unsafe, it drops the act and helps you for real.</li>
       <li>You can switch back to Sweet Mochi any time.</li>
     </ul>
-    <label class="small" style="flex-direction:row;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="evilOk" style="width:auto"> I am 16 or older, I understand all of this, and I want Evil Mochi anyway.</label>
+    <label class="small" style="flex-direction:row;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="evilOk" style="width:auto"> I am 18 or older, I understand all of this, and I want Evil Mochi anyway.</label>
     <div class="row gap"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" id="evilGo" disabled>I agree, unleash it 😈</button></div>`, () => {
     $('#evilOk').onchange = e => $('#evilGo').disabled = !e.target.checked;
     $('#evilGo').onclick = () => { S.evilAgreed = true; closeModal(); setPersona('evil'); };
@@ -788,7 +856,7 @@ let lastMinute = -1;
 setInterval(() => {
   renderFast(); checkFastHour();
   const m = new Date().getMinutes();
-  if (m !== lastMinute) { lastMinute = m; checkReminders(); renderNext(); renderHeader(); }
+  if (m !== lastMinute) { lastMinute = m; checkReminders(); renderNext(); renderHeader(); photoReminder(); }
 }, 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkReminders(); renderAll(); } });
 

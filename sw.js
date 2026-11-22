@@ -1,5 +1,5 @@
 // Service worker: offline cache + notification clicks
-const CACHE = 'bloom-v2';
+const CACHE = 'bloom-v3';
 const FILES = ['./', './index.html', './styles.css', './data.js', './chat.js', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
