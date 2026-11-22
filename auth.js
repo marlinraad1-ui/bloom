@@ -73,6 +73,8 @@ async function afterLogin(isNew) {
   if (liveChannel) { sb.removeChannel(liveChannel); liveChannel = null; }
   celebrate(); toast(isNew ? 'Welcome to Bloom! 🌸' : 'Welcome back! 💖');
   showAuthPanel(false);
+  renderAll(); // themes, VIP workouts, food AI unlock right away
+  if (vipOf(S.community)) setTimeout(() => toast('👑 VIP unlocked'), 1500);
   renderCommunity();
 }
 
@@ -82,7 +84,7 @@ async function logOut() {
     $('#loGo').onclick = async () => {
       if (liveChannel) { sb.removeChannel(liveChannel); liveChannel = null; }
       await sb.auth.signOut();
-      S.community = { name: '', avatar: '🌸', blocked: [] }; save();
+      S.community = { name: '', avatar: '🌸', blocked: [] }; save(); renderAll();
       sb = null; me = null; closeModal(); toast('Logged out');
       if (curView === 'community') renderCommunity();
     };
