@@ -162,6 +162,25 @@
       </div>
     </section>
 
+    <!-- COMMUNITY -->
+    <section class="view" id="view-community">
+      <div class="card">
+        <div class="row between"><h3>👥 Community</h3><button class="btn ghost" id="feedRefresh" style="padding:6px 12px">↻ Refresh</button></div>
+        <div class="small" id="commMe"></div>
+        <div id="composer" hidden>
+          <textarea id="postText" rows="3" maxlength="1000" placeholder="Share your progress, a win, a struggle, anything…"></textarea>
+          <div id="postPreview"></div>
+          <div class="row gap wrap" style="margin-top:8px">
+            <button class="btn ghost" id="postPhotoBtn">📷 Photo</button>
+            <input type="file" accept="image/*" id="postPhotoInput" hidden>
+            <label class="small" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="postStats" checked style="width:auto"> Add my stats</label>
+            <button class="btn" id="postBtn" style="margin-left:auto">Post</button>
+          </div>
+        </div>
+      </div>
+      <div id="feed"></div>
+    </section>
+
     <!-- CHAT -->
     <section class="view" id="view-chat">
       <div class="card chatcard">
@@ -189,7 +208,8 @@
     <button data-view="plan"><span>📋</span>Plan</button>
     <button data-view="body"><span>⚖️</span>Body</button>
     <button data-view="move"><span>🏃</span>Move</button>
-    <button data-view="chat"><span>💬</span>Buddy</button>
+    <button data-view="community"><span>👥</span>People</button>
+    <button data-view="chat"><span>💬</span>Mochi</button>
   </nav>
 </div>
 
@@ -197,8 +217,11 @@
 <div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
 <script src="data.js"></script>
 <script src="chat.js"></script>
 <script src="app.js"></script>
+<script src="community.js"></script>
 </body>
 </html>

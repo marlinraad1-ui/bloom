@@ -87,6 +87,7 @@ function showView(v) {
   document.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('active', x.dataset.view === v));
   document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
   if (v === 'body') renderBody();
+  if (v === 'community') renderCommunity();
   if (v === 'chat') { renderChat(); setTimeout(() => $('#chatLog').scrollTop = 1e9, 30); }
   window.scrollTo(0, 0);
 }
