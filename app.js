@@ -9,16 +9,24 @@ let S = load();
 function load() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-  return Object.assign({
-    profile: null, theme: 'kawaii', fast: null, history: [], weights: [],
-    templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), templateId: 'free',
-    today: null, days: {}, chat: [],
-    settings: { emergency: '112', stepGoal: 20000 }
+  const st = Object.assign({
+    profile: null, theme: 'kawaii', persona: 'sweet', evilAgreed: false, fast: null, history: [], weights: [],
+    templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), templateId: 'student',
+    today: null, days: {}, chat: [], wf: { level: 'all', goal: 'loss', who: '', kpop: false },
+    settings: { emergency: '112', stepGoal: 10000 }
   }, s || {});
+  // v2: replace the old built-in plans with example plans
+  if (!st.v2) {
+    st.templates = JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)); st.templateId = 'student'; st.today = null; st.v2 = true;
+    if (!st.persona) st.persona = 'sweet';
+    if (!st.wf) st.wf = { level: 'all', goal: 'loss', who: '', kpop: false };
+  }
+  return st;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 function day(k = todayKey()) {
-  if (!S.days[k]) S.days[k] = { steps: 0, workouts: [], sleep: 7, intake: 0 };
+  if (!S.days[k]) S.days[k] = { steps: 0, workouts: [], sleep: 7, intake: 0, checks: [] };
+  if (!S.days[k].checks) S.days[k].checks = [];
   return S.days[k];
 }
 
@@ -63,14 +71,14 @@ function applyTheme() {
   document.documentElement.dataset.theme = S.theme;
   const tc = { kawaii: '#ff8fb8', dark: '#0d0d10', simple: '#2563eb' }[S.theme];
   document.querySelector('meta[name=theme-color]').content = tc;
-  const b = BUDDY[S.theme]; $('#buddyFace').textContent = b.face; $('#buddyName').textContent = b.name;
+  const b = BUDDY[S.persona] || BUDDY.sweet; $('#buddyFace').textContent = b.face; $('#buddyName').textContent = b.name;
 }
 $('#themeBtn').onclick = () => openModal(`
   <h2>Choose your style</h2>
   <div class="theme-pick">
-    <button data-t="kawaii" style="background:#ffe3ee;color:#5b3a4a">🌸 Kawaii — soft, pastel &amp; super cute</button>
-    <button data-t="dark" style="background:#111;color:#d4af37;font-family:'Playfair Display',serif">🖤 Dark Classic — elegant black &amp; gold</button>
-    <button data-t="simple" style="background:#fff;color:#1d2430">▫️ Simple — clean, no distractions</button>
+    <button data-t="kawaii" style="background:#ffe3ee;color:#5b3a4a">🌸 Kawaii: soft, pastel &amp; super cute</button>
+    <button data-t="dark" style="background:#111;color:#d4af37;font-family:'Playfair Display',serif">🖤 Dark Classic: elegant black &amp; gold</button>
+    <button data-t="simple" style="background:#fff;color:#1d2430">▫️ Simple: clean, no distractions</button>
   </div>`, m => m.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { S.theme = b.dataset.t; save(); applyTheme(); renderAll(); closeModal(); }));
 
 // ================= NAV =================
@@ -136,7 +144,7 @@ function showBmiIntro() {
       <div class="stat"><b>${Math.round(bmr())}</b><span>kcal/day your body burns at rest</span></div>
       <div class="stat"><b>${toLose.toFixed(1)} kg</b><span>to your goal</span></div>
     </div>
-    <p>Every hour you fast, your body uses about <b>${Math.round(bmr() / 24)} kcal</b> just to keep you alive — more when you walk and work out. I'll show you exactly where you are, every hour. 💕</p>
+    <p>Every hour you fast, your body uses about <b>${Math.round(bmr() / 24)} kcal</b> just to keep you alive, and more when you walk and work out. I'll show you exactly where you are, every hour. 💕</p>
     <button class="btn big" onclick="closeModal()">Let's go!</button>`);
 }
 $('#settingsBtn').onclick = () => profileForm(false);
@@ -168,7 +176,7 @@ function startFastModal() {
       S.lastReason = $('#fReason').value.trim();
       S.fast = { type, goal, start: Math.min(st, Date.now()), reason: S.lastReason, lastHour: Math.floor((Date.now() - st) / 3600000) };
       save(); closeModal(); renderAll(); askNotify();
-      toast('Fast started — you\'ve got this! 💪');
+      toast('Fast started. You\'ve got this! 💪');
     };
   });
 }
@@ -176,7 +184,7 @@ function endFast() {
   const h = fastHours();
   openModal(`<h2>End your fast?</h2>
     <p>You fasted <b>${fmtDur(h)}</b> of your ${S.fast.goal}h goal. ${h >= S.fast.goal ? '🎉 Goal reached!' : 'Ending early for your health is always okay. 💕'}</p>
-    ${h > 72 ? '<div class="warnbox"><b>Break it gently:</b> start with broth or a small soft meal (eggs, yogurt, soup). Wait 1–2 hours before eating more. Avoid big sugary/carb meals for the first day — after long fasts this can be dangerous (refeeding syndrome).</div>' : ''}
+    ${h > 72 ? '<div class="warnbox"><b>Break it gently:</b> start with broth or a small soft meal (eggs, yogurt, soup). Wait 1 to 2 hours before eating more. Avoid big sugary/carb meals for the first day. After long fasts this can be dangerous (refeeding syndrome).</div>' : ''}
     <div class="row gap"><button class="btn ghost" onclick="closeModal()">Keep going</button><button class="btn danger" id="fEnd">End fast</button></div>`, () => {
     $('#fEnd').onclick = () => {
       S.history.unshift({ type: S.fast.type, start: S.fast.start, end: Date.now(), hours: h, goal: S.fast.goal });
@@ -204,7 +212,7 @@ function renderFast() {
     if ($('#startFastBtn')) return;
     $('#fastControls').innerHTML = `<button class="btn big" id="startFastBtn">Start fast</button>`;
     $('#startFastBtn').onclick = startFastModal;
-    $('#stageCard').innerHTML = `<h3>🌱 Ready when you are</h3><p>Start a fast and every hour I'll tell you exactly what your body is doing — and keep you motivated.</p>`;
+    $('#stageCard').innerHTML = `<h3>🌱 Ready when you are</h3><p>Start a fast and every hour I'll tell you exactly what your body is doing and keep you motivated.</p>`;
     $('#timeline').innerHTML = '';
     return;
   }
@@ -214,8 +222,10 @@ function renderFast() {
   $('#fastLabel').textContent = `${FAST_TYPES[f.type].name} · ${Math.min(100, h / f.goal * 100).toFixed(1)}% of ${f.goal < 48 ? f.goal + 'h' : f.goal / 24 + ' days'}`;
   $('#stageEmoji').textContent = s.emoji;
   if (!$('#endFastBtn')) {
-    $('#fastControls').innerHTML = `<div class="row gap" style="justify-content:center"><button class="btn ghost" id="endFastBtn">End fast</button><button class="btn" id="talkBtn">💬 I need help staying strong</button></div>`;
+    $('#fastControls').innerHTML = `<div class="row gap wrap" style="justify-content:center"><button class="btn ghost" id="endFastBtn">End fast</button><button class="btn ghost" id="checkBtn">🩺 Body check</button><button class="btn ghost" id="shareBtn">📸 Share</button><button class="btn" id="talkBtn">💬 Help me stay strong</button></div>`;
     $('#endFastBtn').onclick = endFast;
+    $('#checkBtn').onclick = bodyCheck;
+    $('#shareBtn').onclick = shareCard;
     $('#talkBtn').onclick = () => { showView('chat'); sendChat('I want to break my fast'); };
   }
   const hr = Math.floor(h);
@@ -224,6 +234,7 @@ function renderFast() {
     const left = f.goal - h, burned = h * bmr() / 24 * 1.1;
     $('#stageCard').innerHTML = `
       <div class="stage-hour">Hour ${hr}${hr >= 24 ? ' · Day ' + (Math.floor(h / 24) + 1) : ''} · next update in ${60 - new Date().getMinutes()} min</div>
+      <div class="hype">${esc(hypeFor(hypeNums()))}</div>
       <h3>${s.emoji} ${s.name}</h3>
       <p>${s.body}</p>
       <div class="stage-fact">${s.fact}</div>
@@ -255,8 +266,106 @@ function checkFastHour() {
   if (h > (S.fast.lastHour ?? -1)) {
     S.fast.lastHour = h; save();
     const s = stageFor(h);
-    notify(`⏳ Hour ${h} — ${s.name} ${s.emoji}`, `${s.fact}\n${s.motivation}`);
+    notify(`⏳ Hour ${h}: ${s.name} ${s.emoji}`, `${hypeFor(hypeNums())}\n${s.fact}`);
+    if (h > 0 && h % 4 === 0) setTimeout(() => notify('🩺 Body check time', 'How do you feel? Open Bloom and tap Body check. It takes 10 seconds.'), 4000);
     if (h === S.fast.goal) notify('🎉 Goal reached!', `You completed your ${S.fast.goal}h fast. So proud of you!`);
+  }
+}
+
+// ================= HYPE / BODY CHECK / SHARE =================
+function hypeNums() {
+  const h = fastHours(), kcal = Math.round(h * bmr() / 24 * 1.1);
+  return { h: Math.floor(h), kcal, fatG: Math.round(kcal * 0.7 / 9), name: S.profile?.name };
+}
+
+function bodyCheck() {
+  const sel = new Set();
+  let energy = 3, mood = 3;
+  openModal(`<h2>🩺 Body check</h2>
+    <p class="muted small">Be honest. This is just for you.</p>
+    <div class="field"><label>Energy: <span id="eVal">3</span>/5</label><input type="range" min="1" max="5" value="3" id="eRange"></div>
+    <div class="field"><label>Mood: <span id="mVal">3</span>/5</label><input type="range" min="1" max="5" value="3" id="mRange"></div>
+    <div class="field"><label>How does your body feel? (tap all that fit)</label>
+      <div class="chips" id="symChips">${SYMPTOMS.map(s => `<button type="button" class="chip pick" data-id="${s.id}">${s.label}</button>`).join('')}</div></div>
+    <button class="btn big" id="ckSave">Check me</button>`, () => {
+    $('#eRange').oninput = e => { energy = +e.target.value; $('#eVal').textContent = energy; };
+    $('#mRange').oninput = e => { mood = +e.target.value; $('#mVal').textContent = mood; };
+    document.querySelectorAll('#symChips .pick').forEach(b => b.onclick = () => {
+      const id = b.dataset.id;
+      if (id === 'none') { sel.clear(); document.querySelectorAll('#symChips .pick').forEach(x => x.classList.remove('on')); }
+      else { sel.delete('none'); document.querySelector('#symChips [data-id=none]').classList.remove('on'); }
+      sel.has(id) ? sel.delete(id) : sel.add(id); b.classList.toggle('on', sel.has(id));
+    });
+    $('#ckSave').onclick = () => {
+      const picked = SYMPTOMS.filter(s => sel.has(s.id)), level = Math.max(0, ...picked.map(s => s.level));
+      day().checks.push({ at: Date.now(), energy, mood, symptoms: picked.map(s => s.id), level, hour: S.fast ? Math.floor(fastHours()) : null });
+      save(); showCheckResult(level, picked, energy, mood); renderChecks();
+    };
+  });
+}
+function showCheckResult(level, picked, energy, mood) {
+  const names = picked.map(p => p.label.toLowerCase()).join(', ');
+  const n = hypeNums();
+  let html;
+  if (level >= 3) {
+    html = `<div class="alarm-ring">🚨</div><h2>Please stop your fast now</h2>
+      <p>You said: <b>${esc(names)}</b>. These can be signs your body needs help.</p>
+      <div class="warnbox">Sit or lie down. If you can swallow safely, sip juice or something sweet slowly. Tell someone near you. If it does not get better fast, or you fainted or have chest pain, call emergency services.</div>
+      <a class="btn danger big" style="display:block;text-align:center;text-decoration:none" href="tel:${esc(S.settings.emergency)}">📞 Call ${esc(S.settings.emergency)}</a>
+      <button class="btn ghost big" style="margin-top:8px" id="ckEnd">End my fast</button>`;
+  } else if (level === 2) {
+    html = `<h2>⚠️ Take care of yourself first</h2><p>You said: <b>${esc(names)}</b>.</p>
+      <ol class="small"><li>Sit or lie down for 15 minutes.</li><li>Drink water with a small pinch of salt.</li><li>Breathe slowly: in 4, out 6.</li><li>No workout right now.</li></ol>
+      <p class="small">I'll ask again in 15 minutes. If it gets worse or doesn't pass, break your fast gently. That's not failing, that's smart.</p>
+      <button class="btn big" id="ckOk">Okay</button>`;
+    setTimeout(() => { notify('🩺 Quick check', 'Are you feeling better? Do another body check.'); toast('🩺 Time for a quick re-check'); }, 15 * 60000);
+  } else if (level === 1) {
+    html = `<h2>💛 Normal fasting stuff</h2><p>You said: <b>${esc(names)}</b>. That's common, especially after day 1.</p>
+      <p class="small">Try water with a pinch of salt (electrolytes), rest a bit, and keep workouts gentle today.</p>
+      <p class="stage-motiv">${esc(hypeFor(n))}</p><button class="btn big" id="ckOk">Got it</button>`;
+  } else {
+    html = `<h2>🌟 You're doing amazing</h2><p>Energy ${energy}/5, mood ${mood}/5. Your body is handling this really well.</p>
+      ${S.fast ? `<p class="stage-motiv">${esc(hypeFor(n))}</p>` : ''}<button class="btn big" id="ckOk">Keep going 💪</button>`;
+  }
+  openModal(html, () => {
+    if ($('#ckOk')) $('#ckOk').onclick = closeModal;
+    if ($('#ckEnd')) $('#ckEnd').onclick = () => { closeModal(); if (S.fast) endFast(); };
+  });
+}
+function renderChecks() {
+  const list = Object.entries(S.days).flatMap(([k, d]) => (d.checks || []).map(c => c)).sort((a, b) => b.at - a.at).slice(0, 10);
+  const icon = l => ['🟢', '🟡', '🟠', '🔴'][l];
+  $('#checkList').innerHTML = list.map(c => `<li><span>${icon(c.level)} ${new Date(c.at).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })}${c.hour != null ? ' · hour ' + c.hour : ''}</span><span class="small muted">⚡${c.energy} 🙂${c.mood}</span></li>`).join('') || '<li class="muted">No checks yet. Do one every few hours while fasting.</li>';
+}
+
+async function shareCard() {
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350; const x = c.getContext('2d');
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const g = x.createLinearGradient(0, 0, 1080, 1350); g.addColorStop(0, css('--accent')); g.addColorStop(1, css('--accent2'));
+  x.fillStyle = g; x.fillRect(0, 0, 1080, 1350);
+  x.fillStyle = 'rgba(255,255,255,.92)'; x.beginPath(); x.roundRect(70, 160, 940, 1030, 60); x.fill();
+  x.fillStyle = '#2b1d25'; x.textAlign = 'center';
+  const start = S.weights[0]?.kg, lost = start ? start - kg() : 0, n = hypeNums();
+  x.font = '900 64px Nunito, sans-serif'; x.fillText('My Bloom progress 🌸', 540, 110);
+  x.font = '160px sans-serif'; x.fillText(S.fast ? stageFor(fastHours()).emoji : '🏆', 540, 400);
+  x.font = '900 120px Nunito, sans-serif';
+  x.fillText(S.fast ? fmtDur(fastHours()) : (S.history[0] ? fmtDur(S.history[0].hours) : '0h'), 540, 560);
+  x.font = '700 48px Nunito, sans-serif'; x.fillStyle = '#7a5a6a';
+  x.fillText(S.fast ? `${FAST_TYPES[S.fast.type].name} · ${stageFor(fastHours()).name}` : 'Last fast', 540, 630);
+  x.fillStyle = '#2b1d25'; x.font = '800 56px Nunito, sans-serif';
+  if (S.fast) x.fillText(`🔥 ~${n.kcal} kcal burned`, 540, 760);
+  if (lost > 0) x.fillText(`⚖️ −${lost.toFixed(1)} kg so far`, 540, 850);
+  x.fillText(`👟 ${day().steps.toLocaleString()} steps today`, 540, 940);
+  x.font = 'italic 600 42px Nunito, sans-serif'; x.fillStyle = '#7a5a6a';
+  const quote = pick(MOTIVATION); x.fillText(quote.length > 44 ? quote.slice(0, 44) + '…' : quote, 540, 1080);
+  x.fillStyle = '#fff'; x.font = '800 40px Nunito, sans-serif'; x.fillText((location.host + location.pathname).replace(/index\.html$/, '').replace(/\/$/, ''), 540, 1280);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  const file = new File([blob], 'bloom-progress.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], text: 'My fasting progress with Bloom 🌸' }); } catch (e) {}
+  } else {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'bloom-progress.png'; a.click();
+    toast('Saved your progress picture 📸');
   }
 }
 
@@ -287,10 +396,10 @@ function renderPlan() {
         <button data-act="notify" class="${i.notify ? '' : 'off'}" title="Notification">🔔</button>
         <button data-act="edit" title="Edit">✏️</button>
       </div>
-    </li>`).join('') || '<p class="muted">No tasks yet — add one!</p>';
+    </li>`).join('') || '<p class="muted">No tasks yet. Add one!</p>';
   const done = items.filter(i => i.done).length;
   $('#planProgress').style.width = (items.length ? done / items.length * 100 : 0) + '%';
-  $('#planProgressLabel').textContent = `${done} of ${items.length} done${done === items.length && items.length ? ' — perfect day! 🏆' : ''}`;
+  $('#planProgressLabel').textContent = `${done} of ${items.length} done${done === items.length && items.length ? '. Perfect day! 🏆' : ''}`;
   renderNext();
 }
 $('#taskList').addEventListener('click', e => {
@@ -321,7 +430,7 @@ $('#templateSelect').onchange = e => {
 };
 $('#saveTemplateBtn').onclick = () => {
   S.templates[S.templateId].items = S.today.items.map(({ time, title, why, alarm }) => ({ time, title, why, alarm }));
-  save(); toast('Saved — this plan will be used next time 💾');
+  save(); toast('Saved! This plan will be used next time 💾');
 };
 
 function taskForm(it, preset) {
@@ -347,7 +456,7 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 function listen(cb) {
   if (!SR) return toast('Voice needs Chrome or Edge (on phone: Chrome)');
   const r = new SR(); r.lang = navigator.language || 'en-US'; r.interimResults = false;
-  toast('🎙️ Listening…'); r.onresult = e => cb(e.results[0][0].transcript); r.onerror = () => toast('Did not catch that — try again'); r.start();
+  toast('🎙️ Listening…'); r.onresult = e => cb(e.results[0][0].transcript); r.onerror = () => toast('Did not catch that, try again'); r.start();
 }
 function parseSpoken(t) {
   let time = null, rest = t;
@@ -387,7 +496,7 @@ function playAlarmSound() {
 function stopAlarmSound() { clearInterval(alarmTimer); alarmTimer = null; }
 function ringAlarm(it) {
   playAlarmSound();
-  notify(`⏰ ${it.time} — ${it.title}`, it.why || 'Time for this!');
+  notify(`⏰ ${it.time}: ${it.title}`, it.why || 'Time for this!');
   openModal(`<div class="alarm-ring">⏰</div><h2 style="text-align:center">${esc(it.title)}</h2>
     <p style="text-align:center" class="muted">${it.time}</p>${it.why ? `<div class="stage-fact"><b>Why:</b> ${esc(it.why)}</div>` : ''}
     <div class="row gap"><button class="btn ghost" id="aSnooze">Snooze 10 min</button><button class="btn big" id="aDone">Done ✓</button></div>`, () => {
@@ -414,7 +523,7 @@ $('#testAlarmBtn').onclick = () => ringAlarm({ time: new Date().toTimeString().s
 let swReg = null;
 function notifState() {
   const p = 'Notification' in window ? Notification.permission : 'unsupported';
-  $('#notifStatus').innerHTML = { granted: '✅ Notifications are on.', denied: '❌ Notifications are blocked — allow them in your browser/site settings.', default: 'Notifications are off.', unsupported: 'This browser does not support notifications.' }[p];
+  $('#notifStatus').innerHTML = { granted: '✅ Notifications are on.', denied: '❌ Notifications are blocked. Allow them in your browser/site settings.', default: 'Notifications are off.', unsupported: 'This browser does not support notifications.' }[p];
   $('#enableNotifBtn').style.display = p === 'default' ? '' : 'none';
 }
 async function askNotify() { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); notifState(); }
@@ -445,6 +554,8 @@ $('#logWeightBtn').onclick = () => {
   addWeight(w); save(); $('#weightInput').value = ''; renderBody(); renderGlance();
   toast(prev && w < prev ? `−${(prev - w).toFixed(1)} kg! Amazing 🌟` : 'Logged. Progress isn\'t always a straight line 💕');
 };
+$('#bodyCheckBtn').onclick = bodyCheck;
+$('#shareBtn2').onclick = shareCard;
 $('#sleepInput').onchange = e => { day().sleep = +e.target.value || 0; save(); renderBody(); renderGlance(); };
 $('#intakeInput').onchange = e => { day().intake = +e.target.value || 0; save(); renderBody(); };
 
@@ -459,7 +570,7 @@ function renderBody() {
   $('#bmiMarker').style.left = Math.min(100, Math.max(0, (b - 15) / 25 * 100)) + '%';
   drawWeightChart();
   const lost = start - kg();
-  $('#weightSummary').innerHTML = S.weights.length > 1 ? (lost > 0 ? `You've lost <b>${lost.toFixed(1)} kg</b> since ${S.weights[0].date} 🎉` : 'Keep going — the scale catches up with your effort.') : 'Log your weight each morning (same time, after the toilet) for the best chart.';
+  $('#weightSummary').innerHTML = S.weights.length > 1 ? (lost > 0 ? `You've lost <b>${lost.toFixed(1)} kg</b> since ${S.weights[0].date} 🎉` : 'Keep going. The scale catches up with your effort.') : 'Log your weight each morning (same time, after the toilet) for the best chart.';
   const d = day(); $('#sleepInput').value = d.sleep; $('#intakeInput').value = d.intake || '';
   const x = burnToday(), deficit = x.total - x.intake;
   $('#burnBreakdown').innerHTML = `
@@ -472,6 +583,7 @@ function renderBody() {
     <div class="burn-row"><span>Eaten / drunk</span><b>${Math.round(x.intake)} kcal</b></div>
     <div class="burn-row burn-total"><span>Deficit</span><span style="color:var(--good)">${Math.round(deficit)} kcal ≈ ${Math.round(deficit / 7.7)} g fat</span></div>
     <p class="muted small">Estimates (Mifflin-St Jeor + activity). 7,700 kcal ≈ 1 kg of fat. Early fasting weight loss also includes water.</p>`;
+  renderChecks();
   $('#fastHistory').innerHTML = S.history.slice(0, 20).map(f => `<li><span>${new Date(f.start).toLocaleDateString()} · ${FAST_TYPES[f.type].name}</span><b>${fmtDur(f.hours)} ${f.hours >= f.goal ? '🏆' : ''}</b></li>`).join('') || '<li class="muted">No finished fasts yet.</li>';
 }
 function drawWeightChart() {
@@ -527,31 +639,50 @@ function onMotion(e) {
 }
 $('#pedoBtn').onclick = async () => {
   if (pedoOn) { window.removeEventListener('devicemotion', onMotion); pedoOn = false; $('#pedoBtn').textContent = '👟 Start step counter'; save(); return; }
-  if (!('DeviceMotionEvent' in window)) return toast('No motion sensor here — add steps manually');
+  if (!('DeviceMotionEvent' in window)) return toast('No motion sensor here. Add steps manually');
   if (typeof DeviceMotionEvent.requestPermission === 'function') { try { if (await DeviceMotionEvent.requestPermission() !== 'granted') return toast('Motion permission needed'); } catch (e) { return; } }
   window.addEventListener('devicemotion', onMotion); pedoOn = true; $('#pedoBtn').textContent = '⏸ Stop step counter';
   try { await navigator.wakeLock?.request('screen'); } catch (e) {}
-  toast('Counting steps — keep Bloom open 👟');
+  toast('Counting steps. Keep Bloom open 👟');
 };
 
 function renderWorkouts() {
   const h = fastHours(), fastDay = S.fast ? Math.floor(h / 24) + 1 : 0;
-  $('#workoutHint').textContent = S.fast ? `You're on fasting day ${fastDay}. ${fastDay >= 3 ? 'Choose low-intensity workouts today — they burn mostly fat and keep you safe.' : 'You can still do medium workouts — stop if you feel dizzy.'}` : 'Calories are calculated for YOUR weight.';
-  $('#workoutList').innerHTML = WORKOUTS.map(w => {
+  const f = S.wf, who = f.who || (S.profile?.sex === 'male' ? 'men' : S.profile?.sex === 'female' ? 'women' : 'all');
+  const seg = (key, opts) => `<div class="seg wseg">${opts.map(([v, l]) => `<button type="button" data-k="${key}" data-v="${v}" class="${(key === 'who' ? who : f[key]) === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  $('#workoutFilters').innerHTML =
+    seg('who', [['women', '👩 Women'], ['men', '👨 Men'], ['all', '🧑 Everyone']]) +
+    seg('goal', [['loss', '🔥 Weight loss'], ['gain', '💪 Muscle gain']]) +
+    seg('level', [['all', 'All'], ['simple', '🌱 Simple'], ['medium', '⚡ Medium'], ['max', '💀 Burn the most']]) +
+    `<div class="seg wseg"><button type="button" data-k="kpop" data-v="toggle" class="${f.kpop ? 'on' : ''}">🎤 K-pop idol workouts only</button></div>`;
+  $('#workoutFilters').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const k = b.dataset.k; S.wf[k] = k === 'kpop' ? !S.wf.kpop : b.dataset.v; save(); renderWorkouts();
+  });
+  $('#workoutHint').textContent = S.fast ? `You're on fasting day ${fastDay}. ${fastDay >= 3 ? 'Pick Simple workouts today. They burn mostly fat and keep you safe.' : 'Medium is still okay. Stop if you feel dizzy.'}` : 'Calories are calculated for YOUR weight. Only workouts that burn 80+ kcal are shown.';
+  const list = WORKOUTS
+    .filter(w => w.who === 'all' || who === 'all' || w.who === who)
+    .filter(w => w.goal === 'both' || w.goal === f.goal)
+    .filter(w => f.level === 'all' || w.level === f.level)
+    .filter(w => !f.kpop || w.kpop)
+    .filter(w => workoutKcal(w, w.min) >= 80)
+    .sort((a, b) => workoutKcal(b, b.min) - workoutKcal(a, a.min));
+  const lvl = { simple: '🌱 Simple', medium: '⚡ Medium', max: '💀 Max burn' };
+  $('#workoutList').innerHTML = list.map(w => {
     const kcal = workoutKcal(w, w.min);
-    const ok = !S.fast || w.intensity === 'low' || (w.intensity === 'mid' && fastDay < 3) || (w.intensity === 'high' && fastDay < 2);
+    const ok = !S.fast || w.level === 'simple' || (w.level === 'medium' && fastDay < 3) || (w.level === 'max' && fastDay < 2);
     return `<div class="workout"><div class="w-icon">${w.emoji}</div><div>
-      <div class="w-name">${w.name} · ${w.min} min ${S.fast ? `<span class="tag ${ok ? 'ok' : 'warn'}">${ok ? 'good for today' : 'too hard today'}</span>` : ''}</div>
-      <div class="w-burn">🔥 ≈ ${Math.round(kcal)} kcal · ≈ ${Math.round(kcal / 7.7)} g fat</div>
-      <div class="w-help">${w.help}</div>
+      <div class="w-name">${esc(w.name)} · ${w.min} min</div>
+      <div class="chips" style="margin:4px 0"><span class="chip">${lvl[w.level]}</span>${w.kpop ? '<span class="chip">🎤 K-pop</span>' : ''}${S.fast ? `<span class="tag ${ok ? 'ok' : 'warn'}">${ok ? 'good for today' : 'too hard today'}</span>` : ''}</div>
+      <div class="w-burn">🔥 about ${Math.round(kcal)} kcal · about ${Math.round(kcal / 7.7)} g fat</div>
+      <div class="w-help">${w.goal === 'gain' ? '💪 Builds muscle. ' : w.goal === 'both' ? '🔥💪 Burns fat and builds strength. ' : '🔥 Helps weight loss. '}${esc(w.help)}</div>
       <div class="w-btns"><button class="btn" data-w="${w.id}">▶ Start</button>
-      <a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(w.video)}">📺 Videos</a>
+      <a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(w.video)}">📺 Watch videos</a>
       <button class="btn ghost" data-log="${w.id}">✓ I did it</button></div></div></div>`;
-  }).join('');
+  }).join('') || '<p class="muted">No workouts match. Try another filter.</p>';
   $('#workoutList').querySelectorAll('[data-w]').forEach(b => b.onclick = () => playWorkout(WORKOUTS.find(w => w.id === b.dataset.w)));
   $('#workoutList').querySelectorAll('[data-log]').forEach(b => b.onclick = () => logWorkoutAsk(WORKOUTS.find(w => w.id === b.dataset.log)));
   const d = day();
-  $('#workoutLog').innerHTML = d.workouts.map(w => `<li><span>${esc(w.name)} · ${w.min} min</span><b>${Math.round(w.kcal)} kcal</b></li>`).join('') || '<li class="muted">Nothing yet — even 10 minutes counts!</li>';
+  $('#workoutLog').innerHTML = d.workouts.map(w => `<li><span>${esc(w.name)} · ${w.min} min</span><b>${Math.round(w.kcal)} kcal</b></li>`).join('') || '<li class="muted">Nothing yet. Even 10 minutes counts!</li>';
 }
 function logWorkout(w, min) {
   day().workouts.push({ name: w.name, min: Math.round(min), kcal: workoutKcal(w, min), at: Date.now() });
@@ -586,12 +717,45 @@ function playWorkout(w) {
 function playBeep() { playAlarmSound(); setTimeout(stopAlarmSound, 500); }
 
 // ================= CHAT =================
-function chatCtx() { return { theme: S.theme, hours: fastHours(), name: S.profile?.name, reason: S.fast?.reason || S.lastReason, fastType: S.fast?.type }; }
+function chatCtx() { return { persona: S.persona, hours: fastHours(), name: S.profile?.name, reason: S.fast?.reason || S.lastReason, fastType: S.fast?.type }; }
+function mochiHello() {
+  const n = S.profile?.name ? ' ' + S.profile.name : '';
+  return S.persona === 'evil'
+    ? `Well well well${n}. I'm Evil Mochi 😈\nI don't do cute. I do results. Complain to me and I'll roast you back into fasting mode.\n\nOne promise though: if you feel faint, chest pain, heart racing or really sick, I drop the act and help you stop safely.`
+    : `Hi${n}! I'm Sweet Mochi 🐰🌸\nI'm here whenever fasting gets hard. Tell me how you feel. No judgement, ever.\n\nIf you ever feel faint, chest pain, heart racing or very sick, tell me and I'll help you stop safely.`;
+}
+function setPersona(p) {
+  S.persona = p; S.chat.push({ who: 'bot', text: mochiHello() }); save(); applyTheme(); renderChat();
+}
+function personaModal() {
+  openModal(`<h2>Pick your Mochi</h2>
+    <div class="theme-pick">
+      <button data-p="sweet" class="${S.persona === 'sweet' ? 'on' : ''}">🐰 Sweet Mochi<br><span class="small muted">Gentle, kind, like a soft therapist. For people who need support.</span></button>
+      <button data-p="evil" class="${S.persona === 'evil' ? 'on' : ''}">😈 Evil Mochi<br><span class="small muted">Toxic motivation. Harsh, sarcastic, roasts your excuses. Tough love only.</span></button>
+    </div>`, m => m.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+      if (b.dataset.p === 'sweet') { closeModal(); return setPersona('sweet'); }
+      if (S.evilAgreed) { closeModal(); return setPersona('evil'); }
+      evilTerms();
+    }));
+}
+function evilTerms() {
+  openModal(`<h2>😈 Evil Mochi terms</h2>
+    <p>Evil Mochi uses <b>toxic motivation</b>. That means:</p>
+    <ul class="small">
+      <li>It can be harsh, rude and sarcastic.</li>
+      <li>It may feel like bullying. That's on purpose, to push you.</li>
+      <li>It's a joke character, not a real opinion about you.</li>
+      <li>If you say you feel sick, faint, sad or unsafe, it drops the act and helps you for real.</li>
+      <li>You can switch back to Sweet Mochi any time.</li>
+    </ul>
+    <label class="small" style="flex-direction:row;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="evilOk" style="width:auto"> I am 16 or older, I understand all of this, and I want Evil Mochi anyway.</label>
+    <div class="row gap"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" id="evilGo" disabled>I agree, unleash it 😈</button></div>`, () => {
+    $('#evilOk').onchange = e => $('#evilGo').disabled = !e.target.checked;
+    $('#evilGo').onclick = () => { S.evilAgreed = true; closeModal(); setPersona('evil'); };
+  });
+}
 function renderChat() {
-  if (!S.chat.length) {
-    const b = BUDDY[S.theme];
-    S.chat.push({ who: 'bot', text: `Hi${S.profile?.name ? ' ' + S.profile.name : ''}! I'm ${b.name} ${S.theme === 'kawaii' ? '🌸' : ''}\nI'm here whenever fasting gets hard. Tell me how you feel — no judgement, ever.\n\nIf you ever feel faint, chest pain, heart racing or very sick, tell me and I'll help you stop safely.` });
-  }
+  if (!S.chat.length) S.chat.push({ who: 'bot', text: mochiHello() });
   $('#chatLog').innerHTML = S.chat.slice(-60).map(m => `<div class="msg ${m.who} ${m.alert ? 'alert' : ''}">${esc(m.text)}${m.call ? `<br><a class="callbtn" href="tel:${esc(S.settings.emergency)}">📞 Call emergency ${esc(S.settings.emergency)}</a>` : ''}</div>`).join('');
   const last = [...S.chat].reverse().find(m => m.who === 'bot');
   const q = last?.quick || ['I feel great', 'Hungry', 'Want to break my fast', 'Dizzy', 'Motivate me', 'What\'s happening in my body?'];
@@ -609,6 +773,7 @@ function sendChat(text) {
 }
 $('#chatForm').onsubmit = e => { e.preventDefault(); sendChat($('#chatInput').value); $('#chatInput').value = ''; };
 $('#chatMic').onclick = () => listen(t => sendChat(t));
+$('#switchMochi').onclick = personaModal;
 
 // ================= MAIN LOOP =================
 function renderHeader() {

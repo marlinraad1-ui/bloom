@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ff8fb8">
-<title>Bloom – Fasting Buddy</title>
+<title>Bloom Fasting Buddy</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -116,6 +116,15 @@
         <div id="burnBreakdown"></div>
       </div>
       <div class="card">
+        <div class="row between"><h3>🩺 Body checks</h3><button class="btn" id="bodyCheckBtn">Check now</button></div>
+        <ul class="list" id="checkList"></ul>
+      </div>
+      <div class="card">
+        <h3>📸 Share your progress</h3>
+        <p class="small muted">Makes a cute picture of your fast, kcal burned, kg lost and steps. Post it anywhere: Instagram, TikTok, WhatsApp, Discord.</p>
+        <button class="btn" id="shareBtn2">Make my picture</button>
+      </div>
+      <div class="card">
         <h3>Fasting history</h3>
         <ul class="list" id="fastHistory"></ul>
       </div>
@@ -133,10 +142,11 @@
           <input type="number" id="addStepsInput" class="mini" placeholder="+ steps">
           <button class="btn ghost" id="addStepsBtn">Add</button>
         </div>
-        <p class="muted small">The phone counter works while Bloom is open on your phone (screen on, phone in pocket/hand). You can also type steps from your phone's health app.</p>
+        <p class="muted small">Right now Bloom counts steps while it's open. Until health app sync is added, type in the steps from your phone's health app or watch.</p>
       </div>
       <div class="card">
         <h3>Workouts</h3>
+        <div id="workoutFilters"></div>
         <p class="muted small" id="workoutHint"></p>
         <div id="workoutList"></div>
       </div>
@@ -151,10 +161,11 @@
       <div class="card chatcard">
         <div class="chat-head">
           <div class="buddy" id="buddyFace">🐰</div>
-          <div>
+          <div style="flex:1">
             <div class="buddy-name" id="buddyName">Mochi</div>
-            <div class="muted small">Your gentle fasting buddy · not a doctor</div>
+            <div class="muted small">Your fasting buddy · not a doctor</div>
           </div>
+          <button class="btn ghost" id="switchMochi" style="padding:8px 12px">🔁 Switch</button>
         </div>
         <div class="chat" id="chatLog"></div>
         <div class="quick" id="quickReplies"></div>
