@@ -1016,7 +1016,7 @@ function playWorkout(w) {
     <div class="row gap" style="justify-content:center"><button class="btn ghost" id="pPause">⏸ Pause</button><button class="btn ghost" id="pSkip">⏭ Skip</button><button class="btn" id="pStop">Finish</button></div>
     <p class="muted small">Feeling dizzy or faint? Stop, sit down, and drink water with a pinch of salt.</p></div>`, () => {
     const draw = () => {
-      $('#pStep').textContent = `Move ${i + 1} / ${w.moves.length}`; if (typeof moveIcon === 'function') $('.player .move-emoji').textContent = moveIcon(w.moves[i]); $('#pMove').textContent = w.moves[i];
+      $('#pStep').textContent = `Move ${i + 1} / ${w.moves.length}`; if (typeof playerVisual === 'function') $('.player .move-emoji').innerHTML = playerVisual(w.moves[i]); $('#pMove').textContent = w.moves[i];
       $('#pTime').textContent = fmtHMS(left * 1000).slice(3); $('#pNext').textContent = w.moves[i + 1] ? 'Next: ' + w.moves[i + 1] : 'Last one!';
       $('#pProg').style.width = (elapsed / (w.min * 60) * 100) + '%'; $('#pBurn').textContent = `🔥 ${Math.round(workoutKcal(w, elapsed / 60))} kcal so far`;
     };

@@ -58,6 +58,18 @@ const MOVE_ICONS = [
   [/glute|bridge|hip|donkey|hydrant|kickback|frog|booty/i, '🍑'], [/squat|lunge|wall sit|calf|deadlift/i, '🦵'], [/dumbbell|row|curl|swing|thruster|band/i, '🏋️'],
 ];
 const moveIcon = m => (MOVE_ICONS.find(([r]) => r.test(m)) || [0, '⭐'])[1];
+// real exercise photo (2 frames that flip, so it moves) or the icon when there is no photo
+const exPic = (m, cls = '') => { const id = exFor(m); return id ? `<img class="ex-anim ${cls}" data-id="${id}" data-f="0" src="${EX_IMG(id)}0.jpg" alt="${esc(m)}" loading="lazy">` : moveIcon(m); };
+const playerVisual = m => isVip() ? exPic(m, 'big') : moveIcon(m);
+setInterval(() => document.querySelectorAll('img.ex-anim').forEach(i => { i.dataset.f = i.dataset.f === '1' ? '0' : '1'; i.src = EX_IMG(i.dataset.id) + i.dataset.f + '.jpg'; }), 900);
+
+// how to do one exercise (VIP)
+function exerciseSheet(m, back) {
+  const id = exFor(m), info = id && EX_INFO[id];
+  openModal(`<div class="ex-sheet"><div class="ex-photo">${exPic(m, 'big')}</div>
+    <h2>${esc(m)}</h2>${info ? `<ol class="ex-steps">${info.s.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '<p>Follow the music and copy the moves. Big arms, soft knees, keep moving!</p>'}
+    <button class="btn big" id="exBack">‹ Back to workout</button></div>`, () => { $('#exBack').onclick = back; });
+}
 const fmtMS = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 
 // best workout for you: matches your gear, jumping choice, goal and fasting day; most calories wins
@@ -92,11 +104,12 @@ function workoutPage(w) {
     <div class="wk-stats"><div>⏱️ <b>${w.min}</b> mins</div><span></span><div>⚡ <b>${kcal}</b> calories</div></div>
     <div class="wk-tags">${w.jump ? '<span class="chip">🦘 Has jumping</span>' : '<span class="chip">🤫 No jumping</span>'}${(w.needs || []).map(g => { const x = GEAR.find(y => y[0] === g); return `<span class="chip">${x[1]} ${x[2]}</span>`; }).join('')}<span class="chip">🔥 ${Math.round(kcal / 7.7)} g fat</span></div>
     <h3 class="wk-h">Exercises (${w.moves.length})</h3>
-    <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex"><div class="wk-thumb">${moveIcon(m)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
-    <a class="linkbtn wk-video" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(w.video)}">📺 Watch how to do the moves</a>
+    <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
+    <p class="muted small wk-video">Tap an exercise to see how to do it.</p>
     <div class="wk-go"><button class="btn big" id="wkStart">▶ Start Now</button></div>`, m => {
     m.classList.add('full', 'wk-page');
     $('#wkStart').onclick = () => { m.classList.remove('full', 'wk-page'); playWorkout(w); };
+    m.querySelectorAll('.wk-ex').forEach(r => r.onclick = () => { m.classList.remove('full', 'wk-page'); exerciseSheet(w.moves[+r.dataset.i], () => workoutPage(w)); });
   });
 }
 const _closeModal2 = window.closeModal;
@@ -128,6 +141,10 @@ renderWorkouts = function () {
     card.querySelector('.w-name').insertAdjacentHTML('beforeend', ' <button class="linkbtn wk-open" title="Workout page">📋</button>');
     card.querySelector('.wk-open').onclick = () => workoutPage(WORKOUTS.find(w => w.id === id));
     if (isVip()) card.querySelector('[data-w]').onclick = () => workoutPage(WORKOUTS.find(w => w.id === id));
+    // no more YouTube: see the exercises right inside Bloom
+    const yt = card.querySelector('a[href*="youtube"]');
+    if (yt) yt.outerHTML = `<button class="btn ghost" data-ex="${id}">📋 Exercises${isVip() ? '' : ' 🔒'}</button>`;
+    card.querySelector('[data-ex]').onclick = () => workoutPage(WORKOUTS.find(w => w.id === id));
   });
 };
 renderWorkouts();
