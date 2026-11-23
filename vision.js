@@ -97,7 +97,7 @@ async function visionEditor() {
       <label class="photo-slot vsm ${inspoImg ? 'has' : ''}" id="vInspoSlot" style="${inspoImg ? `background-image:url(${inspoImg})` : ''}"><input type="file" accept="image/*" id="vInspoPic" hidden><span>🌟<br>photo</span></label>
       <div class="field" style="flex:1"><label>What do they mean to me?</label><textarea id="vInspoText" rows="3" maxlength="300" placeholder="e.g. She never gives up, and neither will I">${esc(v.inspoText)}</textarea></div>
     </div>
-    <div class="field"><label>Me now vs my goal (side by side, shown first when you want to quit)</label>
+    <div class="field"><label>Me now ➜ my goal (pinned at the top of your board)</label>
       <div class="nvg">
         <label class="photo-slot vsm ${nowImg ? 'has' : ''}" id="vNowSlot" style="${nowImg ? `background-image:url(${nowImg})` : ''}"><input type="file" accept="image/*" id="vNowPic" hidden><span>📸<br>Me now</span></label>
         <span class="nvg-arrow">➜</span>
@@ -108,10 +108,19 @@ async function visionEditor() {
     <div class="field"><label>Vision photos (goal body, places, outfits, anything)</label>
       <div class="vgrid" id="vGrid">${thumbs.map(p => `<div class="vthumb" data-id="${p.id}"><img src="${p.img || ''}" alt=""><input value="${esc(p.caption || '')}" placeholder="caption" maxlength="80"><button class="vdel" data-id="${p.id}">✕</button></div>`).join('')}
         <label class="vthumb add"><input type="file" accept="image/*" id="vAdd" hidden multiple>＋<br>Add</label></div></div>
+    <div class="field"><label>Affirmation stickers (pick up to 5, or write your own)</label>
+      <div class="affs" id="vAffs">${[...new Set(AFFIRMATIONS.concat(v.affirmations || []))].map(a => `<button type="button" class="chip pick ${(v.affirmations || []).includes(a) ? 'on' : ''}" data-a="${esc(a)}">${esc(a)}</button>`).join('')}</div>
+      <div class="row gap" style="margin-top:6px"><input id="vAffNew" maxlength="40" placeholder="My own affirmation"><button type="button" class="btn ghost" id="vAffAdd">＋</button></div></div>
     <button class="btn big" id="vSave">Save my vision board</button>
-    <button class="btn ghost big" style="margin-top:8px" id="vPreview">▶ Preview</button>
+    <button class="btn ghost big" style="margin-top:8px" id="vPreview">👀 See my board</button>
     <button class="btn ghost big" style="margin-top:8px;color:var(--danger)" id="vReset">🗑️ Reset vision board</button>`, () => {
     let inspoNew = null, nowNew = null, goalNew = null;
+    const hookAff = () => document.querySelectorAll('#vAffs [data-a]').forEach(b => b.onclick = () => {
+      const on = document.querySelectorAll('#vAffs .on').length;
+      if (!b.classList.contains('on') && on >= 5) return toast('Pick up to 5 ✨'); b.classList.toggle('on');
+    });
+    hookAff();
+    $('#vAffAdd').onclick = () => { const t = $('#vAffNew').value.trim(); if (!t) return; $('#vAffs').insertAdjacentHTML('beforeend', `<button type="button" class="chip pick" data-a="${esc(t)}">${esc(t)}</button>`); $('#vAffNew').value = ''; hookAff(); $('#vAffs [data-a]:last-child').click(); };
     $('#vNowPic').onchange = async e => { const f = e.target.files[0]; if (!f) return; nowNew = await shrinkImage(f, 1080); $('#vNowSlot').style.backgroundImage = `url(${nowNew})`; $('#vNowSlot').classList.add('has'); };
     $('#vGoalPic').onchange = async e => { const f = e.target.files[0]; if (!f) return; goalNew = await shrinkImage(f, 1080); $('#vGoalSlot').style.backgroundImage = `url(${goalNew})`; $('#vGoalSlot').classList.add('has'); };
     $('#vInspoPic').onchange = async e => { const f = e.target.files[0]; if (!f) return; inspoNew = await shrinkImage(f, 1080); $('#vInspoSlot').style.backgroundImage = `url(${inspoNew})`; $('#vInspoSlot').classList.add('has'); };
@@ -134,6 +143,7 @@ async function visionEditor() {
       if (nowNew) { const id = uid(); await visPut(id, nowNew); v.nowPhoto = id; nowNew = null; }
       if (goalNew) { const id = uid(); await visPut(id, goalNew); v.goalPhoto = id; goalNew = null; }
       v.compareText = $('#vCmpText').value.trim();
+      v.affirmations = [...document.querySelectorAll('#vAffs .on')].map(b => b.dataset.a);
       save(); renderVisionCard();
     };
     $('#vSave').onclick = async () => { await collect(); closeModal(); toast('Vision board saved ✨'); celebrate(); };
@@ -158,4 +168,83 @@ async function renderVisionCard() {
   $('#vcOpen').onclick = () => showVision();
 }
 
+
+// ================= VISION BOARD 3: a real mood board collage =================
+// Polaroids with washi tape and handwritten captions, sticky notes, a Now → Goal pair with a drawn arrow,
+// and affirmation stickers on paper. Shown when you open your board and when you try to end a fast early.
+
+const AFFIRMATIONS = ['I can do hard things', 'My body is changing every hour', 'Discipline > cravings', 'I keep my promises to myself', 'Future me is proud', 'Hunger is temporary, results stay', 'I am becoming her', 'Slow progress is still progress', 'I deserve to feel good in my body', 'Water, patience, glow'];
+const TAPES = ['#ffd6e7', '#c9f0ff', '#fff1a8', '#d9f7c9', '#e7d9ff'];
+const rot = i => [-4, 3, -2, 5, -3, 2, -5, 4][i % 8];
+
+async function boardItems(breaking) {
+  const v = vis(), items = [];
+  const nowImg = v.nowPhoto ? await visImg(v.nowPhoto) : null, goalImg = v.goalPhoto ? await visImg(v.goalPhoto) : null;
+  if (nowImg || goalImg) items.push(`<div class="vb-item vb-pair">
+      ${nowImg ? `<figure class="vb-pol" style="--r:-4deg"><i class="tape" style="--t:${TAPES[0]}"></i><img src="${nowImg}" alt=""><figcaption>me now</figcaption></figure>` : ''}
+      ${nowImg && goalImg ? '<svg class="vb-arrow" viewBox="0 0 80 40"><path d="M4 30 C 25 4, 50 4, 70 22" /><path d="M60 14 L72 23 L58 28" /></svg>' : ''}
+      ${goalImg ? `<figure class="vb-pol" style="--r:4deg"><i class="tape" style="--t:${TAPES[2]}"></i><img src="${goalImg}" alt=""><figcaption>my goal ✨</figcaption></figure>` : ''}
+      ${v.compareText ? `<p class="vb-hand big">${esc(v.compareText)}</p>` : ''}</div>`);
+  if (v.why) items.push(`<div class="vb-item vb-note yellow" style="--r:-2deg"><i class="pin"></i><b>why I'm doing this</b><p>${esc(v.why)}</p></div>`);
+  const photos = await Promise.all(v.photos.map(async p => ({ ...p, img: await visImg(p.id) })));
+  photos.filter(p => p.img).forEach((p, i) => items.push(`<figure class="vb-item vb-pol" style="--r:${rot(i)}deg"><i class="tape" style="--t:${TAPES[(i + 1) % 5]}"></i><img src="${p.img}" alt="">${p.caption ? `<figcaption>${esc(p.caption)}</figcaption>` : ''}</figure>`));
+  if (v.inspo || v.inspoText || v.inspoPhoto) {
+    const im = v.inspoPhoto ? await visImg(v.inspoPhoto) : null;
+    items.push(`<div class="vb-item vb-note pink" style="--r:2deg"><i class="pin"></i>${im ? `<img src="${im}" class="vb-inspo" alt="">` : ''}<b>my inspo${v.inspo ? ': ' + esc(v.inspo) : ''}</b>${v.inspoText ? `<p>${esc(v.inspoText)}</p>` : ''}</div>`);
+  }
+  if (v.keep) items.push(`<div class="vb-item vb-note blue" style="--r:-3deg"><i class="pin"></i><b>what keeps me going</b><p>${esc(v.keep)}</p></div>`);
+  const aff = (v.affirmations && v.affirmations.length ? v.affirmations : AFFIRMATIONS.slice(0, 3));
+  aff.forEach((a, i) => items.push(`<div class="vb-item vb-sticker s${i % 4}" style="--r:${rot(i + 3)}deg">${esc(a)}</div>`));
+  if (breaking && S.fast) { const n = hypeNums(); items.splice(1, 0, `<div class="vb-item vb-note mint" style="--r:1deg"><i class="pin"></i><b>${n.h} hours already done</b><p>About ${n.kcal} kcal burned from your own fat stores. Don't throw that away now.</p></div>`); }
+  return items;
+}
+
+async function boardHTML(breaking) {
+  const items = await boardItems(breaking);
+  const title = S.profile?.name ? `${esc(S.profile.name)}'s vision` : 'my vision';
+  return `<div class="vb"><h2 class="vb-title">${title} <span>${new Date().getFullYear()}</span></h2>
+    ${items.length ? `<div class="vb-grid">${items.join('')}</div>`
+      : '<p class="vb-hand big" style="text-align:center">Your board is empty. Add your photos, your why and your goal ✨</p>'}</div>`;
+}
+
+// the board replaces the old story view everywhere (home, quitting early, Mochi)
+showVision = async function ({ breaking = false, onStop = null, onKeep = null } = {}) {
+  if (visEmpty() && !breaking) return visionEditor();
+  const board = visEmpty() ? '' : await boardHTML(breaking);
+  const fallback = visEmpty() ? `<div class="vb"><h2 class="vb-title">remember why you started</h2><div class="vb-grid">
+      <div class="vb-item vb-note yellow" style="--r:-2deg;--d:0ms"><i class="pin"></i><b>your promise</b><p>${esc(S.fast?.reason || S.lastReason || 'Somewhere inside you made a promise. This is the moment it gets tested.')}</p></div>
+      ${AFFIRMATIONS.slice(0, 4).map((a, i) => `<div class="vb-item vb-sticker s${i}" style="--r:${rot(i)}deg;--d:${(i + 1) * 90}ms">${a}</div>`).join('')}</div></div>` : '';
+  openModal(`<div class="vb-wrap">
+      ${breaking ? '<div class="vb-stop">Wait. Look at this first 💭</div>' : ''}
+      ${board || fallback}
+      <div class="vb-actions">${breaking
+        ? '<button class="btn big" id="vbKeep">💪 I\'ll keep going</button><button class="linkbtn" id="vbStop">I still want to stop</button>'
+        : '<button class="btn big" id="vbKeep">Close ✨</button><button class="linkbtn" id="vbEdit">✏️ Edit my board</button>'}</div></div>`, m => {
+    m.classList.add('full', 'vb-modal');
+    m.querySelectorAll('.vb-item').forEach((el, i) => el.style.setProperty('--d', i * 90 + 'ms'));
+    $('#vbKeep').onclick = () => { closeModal(); if (breaking) { celebrate(); toast(pick(['That\'s the spirit! 💪', 'Proud of you. Keep going ✨', 'Champion move 👑'])); } onKeep && onKeep(); };
+    if ($('#vbStop')) $('#vbStop').onclick = () => { closeModal(); onStop && onStop(); };
+    if ($('#vbEdit')) $('#vbEdit').onclick = () => visionEditor();
+    m.querySelectorAll('.vb-pol img, .vb-inspo').forEach(img => img.onclick = () => { img.closest('.vb-item, .vb-pol').classList.toggle('zoom'); });
+  });
+};
+const _closeModal3 = window.closeModal;
+window.closeModal = function () { $('#modal').classList.remove('vb-modal'); _closeModal3(); };
+
+// home card: a little live preview of the board
+renderVisionCard = async function () {
+  const box = $('#visionCard'); if (!box) return;
+  if (visEmpty()) {
+    box.innerHTML = `<div class="row between"><h3>✨ My vision board</h3></div>
+      <p class="small">Pin your goal photos, your why and your affirmations. Bloom shows your board when fasting gets hard.</p>
+      <div class="row gap wrap"><button class="btn" id="vcEdit">Create my vision board</button></div>`;
+  } else {
+    const items = (await boardItems(false)).slice(0, 7);
+    box.innerHTML = `<div class="row between"><h3>✨ My vision board</h3><button class="linkbtn" id="vcEdit">edit</button></div>
+      <div class="vb mini" id="vcOpen"><div class="vb-grid">${items.join('')}</div></div>
+      <button class="btn ghost" id="vcOpen2" style="margin-top:8px">Open my board</button>`;
+    $('#vcOpen').onclick = $('#vcOpen2').onclick = () => showVision();
+  }
+  $('#vcEdit').onclick = visionEditor;
+};
 renderVisionCard();
