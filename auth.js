@@ -28,7 +28,8 @@ function renderAuth(mode = 'signup', note = '') {
     <form id="authForm" class="auth-form">
       <input type="email" id="auEmail" placeholder="Email" autocomplete="email" required>
       ${forgot ? '' : `<input type="password" id="auPass" placeholder="Password (at least 6 characters)" autocomplete="${signup ? 'new-password' : 'current-password'}" minlength="6" required>`}
-      ${signup ? '<input type="password" id="auPass2" placeholder="Repeat password" autocomplete="new-password" minlength="6" required>' : ''}
+      ${signup ? `<input type="password" id="auPass2" placeholder="Repeat password" autocomplete="new-password" minlength="6" required>
+      <label class="small toggle-row"><input type="checkbox" id="auAgree" required> I'm 18+ and agree to the <a href="legal.html#terms" target="_blank" rel="noopener">Terms</a>, <a href="legal.html#rules" target="_blank" rel="noopener">Community rules</a> (no bullying, hate or harmful content) and <a href="legal.html#privacy" target="_blank" rel="noopener">Privacy policy</a>.</label>` : ''}
       <button class="btn big" id="auGo">${signup ? 'Create my account ✨' : forgot ? 'Send reset link' : 'Log in'}</button>
     </form>
     <div class="auth-links">

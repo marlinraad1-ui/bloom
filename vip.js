@@ -26,12 +26,13 @@ function vipModal(reason) {
     <div class="vip-perks">${VIP_PERKS.map(([e, t, d]) => `<div class="vip-perk"><span class="vp-e">${e}</span><div><b>${t}</b><p class="muted small">${d}</p></div></div>`).join('')}</div>
     ${isVip()
       ? `<div class="auth-note">👑 You're VIP${S.community?.is_dev ? ' forever (developer)' : S.community?.vip_until ? ' until ' + new Date(S.community.vip_until).toLocaleDateString() : ''}. Everything is open. Enjoy!</div>${S.community?.is_dev ? '' : '<button class="btn ghost big" id="vipManage">Manage or cancel my VIP</button>'}`
-      : `<button class="btn big vip-btn" id="vipGo">👑 Get VIP · ${VIP_PRICE} / year</button>
+      : `<label class="small toggle-row vip-agree"><input type="checkbox" id="vipAgree"> I agree to the <a href="legal.html#vip" target="_blank" rel="noopener">VIP terms</a>. VIP starts right away, and I know I lose my 14-day withdrawal right once it starts.</label>
+         <button class="btn big vip-btn" id="vipGo">👑 Get VIP · ${VIP_PRICE} / year</button>
          <button class="btn ghost big" id="vipLogin">Already VIP? Log in</button>`}
     <p class="muted small" style="text-align:center">🔒 Secure payment by Stripe. Renews yearly, cancel anytime in one tap.<br>Fasting, water, steps, Mochi and the community stay free forever.</p>
     <button class="btn ghost big" onclick="closeModal()">${isVip() ? 'Close' : 'Maybe later'}</button>
   </div>`, () => {
-    if ($('#vipGo')) $('#vipGo').onclick = vipBuy;
+    if ($('#vipGo')) $('#vipGo').onclick = () => $('#vipAgree').checked ? vipBuy() : toast('Please tick the box first');
     if ($('#vipManage')) $('#vipManage').onclick = vipManage;
     if ($('#vipLogin')) $('#vipLogin').onclick = () => { closeModal(); showView('community'); setTimeout(() => { if (!$('#authPanel').hidden) renderAuth('login'); }, 900); };
   });

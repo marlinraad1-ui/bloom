@@ -103,6 +103,7 @@ function renderCommunityHead() {
   const c = comm();
   $('#commMe').innerHTML = c.name ? `<button class="me-chip" id="commEdit">${avatarHTML(c, 'sm')} <b>${nameHTML(c)}</b> <span class="muted">· my profile</span></button>` : '';
   if ($('#commEdit')) $('#commEdit').onclick = () => showProfile(me);
+  if (c.is_dev) { $('#commMe').insertAdjacentHTML('beforeend', ' <button class="me-chip" id="commReports">🚩 Reports</button>'); $('#commReports').onclick = devReports; }
   $('#postWeight').checked = !!c.show_weight;
 }
 
@@ -196,12 +197,14 @@ async function showProfile(uid) {
       <h2>${nameHTML(p)}</h2>${p.is_dev ? '<p class="dev-sub">Creator of Bloom ✨ Everyone follows the developer.</p>' : ''}
       ${p.bio ? `<p>${esc(p.bio)}</p>` : ''}
       <div class="stats" style="width:100%"><div class="stat"><b>${posts.length}</b><span>posts</span></div><div class="stat"><b>${likesGot}</b><span>likes</span></div></div>
-      ${mine ? '<button class="btn" id="pvEdit">✏️ Edit my profile</button>' : `<div class="row gap wrap" style="justify-content:center">${friendButton(uid)}${p.is_dev ? '' : '<button class="btn ghost" id="pvBlock">🚫 Block</button>'}</div>`}
+      ${mine ? '<button class="btn" id="pvEdit">✏️ Edit my profile</button>' : `<div class="row gap wrap" style="justify-content:center">${friendButton(uid)}${p.is_dev ? '' : '<button class="btn ghost" id="pvBlock">🚫 Block</button><button class="btn ghost" id="pvReport">🚩 Report</button>'}${comm().is_dev && !p.is_dev ? `<button class="btn ghost" id="pvBan">${p.banned ? '✅ Unban' : '⛔ Ban'}</button>` : ''}</div>`}
     </div>
     <div id="pvPosts" style="margin-top:12px">${posts.map(postHTML).join('') || '<p class="muted small">No posts yet.</p>'}</div>
     <button class="btn ghost big" style="margin-top:8px" onclick="closeModal()">Close</button>`, m => {
       if ($('#pvEdit')) $('#pvEdit').onclick = () => commProfile();
       if ($('#pvBlock')) $('#pvBlock').onclick = () => blockUser(uid);
+      if ($('#pvReport')) $('#pvReport').onclick = () => reportModal('user', uid, 'Profile of ' + p.name);
+      if ($('#pvBan')) $('#pvBan').onclick = async () => { const r = await sb.rpc('set_ban', { uid, ban: !p.banned }); toast(r.error ? 'Didn\'t work' : (p.banned ? 'Unbanned' : 'Banned ⛔')); closeModal(); };
       if (!mine) hookFriendButton(uid, p);
       $('#pvPosts').addEventListener('click', postClick);
     });
@@ -233,11 +236,14 @@ async function postClick(e) {
     const mine = uid === me;
     openModal(`<h2>Post options</h2><div class="theme-pick">
       <button id="mProf">👤 View profile</button>
-      ${mine ? '<button id="mDel">🗑️ Delete my post</button>' : post.classList.contains('dev-post') ? '' : '<button id="mBlock">🚫 Block this person</button>'}
+      ${mine ? '<button id="mDel">🗑️ Delete my post</button>' : post.classList.contains('dev-post') ? '' : '<button id="mReport">🚩 Report this post</button><button id="mBlock">🚫 Block this person</button>'}
+      ${!mine && comm().is_dev ? '<button id="mDevDel">🛡️ Remove post (developer)</button>' : ''}
       <button onclick="closeModal()">Cancel</button></div>`, () => {
       $('#mProf').onclick = () => showProfile(uid);
       if ($('#mBlock')) $('#mBlock').onclick = () => blockUser(uid);
       if ($('#mDel')) $('#mDel').onclick = () => deletePost(post, id);
+      if ($('#mReport')) $('#mReport').onclick = () => reportModal('post', id, 'Post by ' + (post.querySelector('.who.name')?.textContent || '').trim());
+      if ($('#mDevDel')) $('#mDevDel').onclick = () => deletePost(post, id);
     });
   }
 }
@@ -261,9 +267,14 @@ async function openComments(postId) {
     const load = async () => {
       const { data } = await sb.from('comments').select(`*, profiles(${PROFILE_COLS})`).eq('post_id', postId).order('created_at').limit(200);
       const blocked = comm().blocked || [];
-      $('#cList').innerHTML = (data || []).filter(c => !blocked.includes(c.user_id)).map(c => { const p = c.profiles || c; return `<div class="comment">${avatarHTML(p)}<div><b>${nameHTML(p)}</b> <span class="muted small">${timeAgo(c.created_at)}</span><div>${esc(c.body)}</div></div></div>`; }).join('') || '<p class="muted small">No comments yet.</p>';
+      $('#cList').innerHTML = (data || []).filter(c => !blocked.includes(c.user_id)).map(c => { const p = c.profiles || c; return `<div class="comment">${avatarHTML(p)}<div style="flex:1"><b>${nameHTML(p)}</b> <span class="muted small">${timeAgo(c.created_at)}</span><div>${esc(c.body)}</div></div>${c.user_id !== me ? `<button class="linkbtn" data-crep="${c.id}" title="Report">🚩</button>` : ''}${c.user_id === me || comm().is_dev ? `<button class="linkbtn" data-cdel="${c.id}" title="Delete">🗑️</button>` : ''}</div>`; }).join('') || '<p class="muted small">No comments yet.</p>';
     };
     load();
+    $('#cList').onclick = async e => {
+      const rep = e.target.closest('[data-crep]'), del = e.target.closest('[data-cdel]');
+      if (rep) reportModal('comment', rep.dataset.crep, 'A comment');
+      if (del && confirm('Delete this comment?')) { const r = await sb.from('comments').delete().eq('id', del.dataset.cdel); if (r.error) toast('Couldn\'t delete'); else { load(); loadFeed(); } }
+    };
     $('#cForm').onsubmit = async e => {
       e.preventDefault(); const body = $('#cText').value.trim(); if (!body) return;
       $('#cText').value = '';

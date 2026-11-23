@@ -116,7 +116,7 @@ function msgHTML(m) {
 async function openChat(p) {
   openChatWith = p.id;
   openModal(`<div class="chat-sheet">
-      <div class="chat-top"><button class="linkbtn" id="dmBack">←</button>${avatarHTML(p)}<button class="who name" id="dmProf">${nameHTML(p)}</button></div>
+      <div class="chat-top"><button class="linkbtn" id="dmBack">←</button>${avatarHTML(p)}<button class="who name" id="dmProf">${nameHTML(p)}</button>${p.is_dev ? '' : '<button class="linkbtn" id="dmReport" title="Report" style="margin-left:auto">🚩</button>'}</div>
       <div class="dm-list" id="dmList"><p class="muted small">Loading…</p></div>
       <div id="dmPrev"></div>
       <form class="chat-input" id="dmForm"><button type="button" class="iconbtn" id="dmPic">📷</button><input type="file" accept="image/*" id="dmPicIn" hidden><input id="dmText" maxlength="2000" placeholder="Message…" autocomplete="off"><button class="btn">Send</button></form>
@@ -132,6 +132,7 @@ async function openChat(p) {
     sb.from('messages').update({ read_at: new Date().toISOString() }).eq('receiver', me).eq('sender', p.id).is('read_at', null).then(() => loadFriends());
     let pic = null;
     $('#dmPic').onclick = () => $('#dmPicIn').click();
+    if ($('#dmReport')) $('#dmReport').onclick = () => reportModal('message', p.id + ':chat', 'Chat with ' + p.name);
     $('#dmPicIn').onchange = async e => { const f = e.target.files[0]; if (!f) return; pic = await shrinkImage(f, 1080); $('#dmPrev').innerHTML = `<div class="dm-prev"><img src="${pic}"><button class="linkbtn" id="dmPicX">✕</button></div>`; $('#dmPicX').onclick = () => { pic = null; $('#dmPrev').innerHTML = ''; }; };
     $('#dmForm').onsubmit = async e => {
       e.preventDefault();

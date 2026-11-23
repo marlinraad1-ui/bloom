@@ -77,13 +77,41 @@ async function sync(user: { id: string }) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  if (!STRIPE) return json({ error: 'not_configured' }, 503);
   try {
-    // who is asking? (must be a real account with an email, not a guest)
     const ur = await fetch(`${URL_}/auth/v1/user`, { headers: { apikey: ANON, Authorization: req.headers.get('Authorization') || '' } });
     const user = ur.ok ? await ur.json() : null;
-    if (!user?.id || !user.email || user.is_anonymous) return json({ error: 'need_account' }, 401);
     const p = await req.json().catch(() => ({}));
+    if (!user?.id) return json({ error: 'need_account' }, 401);
+
+    // delete my account (required by the App Store and Google Play). Works for guests too.
+    if (p.action === 'delete_account') {
+      const [prof] = await db(`profiles?id=eq.${user.id}&select=is_dev`);
+      if (prof?.is_dev) return json({ error: 'dev_protected' }, 403);
+      // 1) stop any VIP subscription so nobody is charged again
+      if (STRIPE) {
+        const rows = await db(`vip_billing?user_id=eq.${user.id}&select=stripe_customer`);
+        const cust = rows?.[0]?.stripe_customer;
+        if (cust) {
+          try {
+            const subs = await stripe('subscriptions', { customer: cust, status: 'all', limit: '20' }, 'GET');
+            for (const s of subs.data || []) if (['active', 'trialing', 'past_due', 'unpaid'].includes(s.status)) await stripe(`subscriptions/${s.id}`, {}, 'DELETE');
+          } catch (_e) { /* customer from another mode: nothing to cancel */ }
+        }
+      }
+      // 2) delete uploaded photos, banners and chat pictures
+      const sh = { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' };
+      const files = await fetch(`${URL_}/storage/v1/object/list/photos`, { method: 'POST', headers: sh, body: JSON.stringify({ prefix: `${user.id}/`, limit: 1000 }) }).then(r => r.json()).catch(() => []);
+      const paths = (Array.isArray(files) ? files : []).map((f: { name: string }) => `${user.id}/${f.name}`);
+      if (paths.length) await fetch(`${URL_}/storage/v1/object/photos`, { method: 'DELETE', headers: sh, body: JSON.stringify({ prefixes: paths }) });
+      // 3) delete the account: profile, posts, comments, likes, friends, chats and billing go with it
+      const d = await fetch(`${URL_}/auth/v1/admin/users/${user.id}`, { method: 'DELETE', headers: sh });
+      if (!d.ok) return json({ error: 'delete_failed' }, 500);
+      return json({ deleted: true });
+    }
+
+    if (!STRIPE) return json({ error: 'not_configured' }, 503);
+    // payments need a real account with an email, not a guest
+    if (!user.email || user.is_anonymous) return json({ error: 'need_account' }, 401);
     const back = safeReturn(p.return);
 
     if (p.action === 'checkout') {
