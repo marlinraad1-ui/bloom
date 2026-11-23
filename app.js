@@ -69,6 +69,7 @@ function toast(msg) {
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
 }
 function openModal(html, onMount) {
+  $('#modal').classList.remove('full', 'story-modal', 'wk-page');
   $('#modal').innerHTML = html; $('#modalBack').classList.add('show');
   if (onMount) onMount($('#modal'));
 }
