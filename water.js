@@ -148,8 +148,9 @@ renderWater = function () {
       </div>
     </div>
     <div class="cups" id="wKind">${CUPS.map(k => { const ml = drinkTotal(k), lim = DRINK_LIMIT[k]; return `<button type="button" class="cupbtn ${k === sel ? 'on' : ''} ${ml > lim ? 'over' : ''}" data-k="${k}">${miniCup(k, ml / lim * 100)}<span class="cn">${DRINK_TYPES[k].name}</span><span class="cm">${ml ? `<b>${ml}</b> / ${lim} ml` : `0 ml`}</span></button>`; }).join('')}</div>
-    <div class="addrow"><span class="addfor">${sd.emoji} ${sd.name}</span>${[150, 250, 330, 500].map(v => `<button class="btn ghost wadd ${v === sd.ml ? 'suggest' : ''}" data-ml="${v}">+${v}</button>`).join('')}<button class="btn ghost" id="wOther">+ other</button><button class="linkbtn" id="wUndo">↩ undo</button></div>
+    <div class="addrow"><span class="addfor">${sd.emoji} ${sd.name}</span>${[150, 250, 330, 500].map(v => `<button class="btn ghost wadd ${v === sd.ml ? 'suggest' : ''}" data-ml="${v}">+${v}</button>`).join('')}<button class="btn ghost" id="wOther">+ other</button><button class="linkbtn" id="wUndo">↩ undo</button><button class="linkbtn" id="wReset" style="color:var(--danger)">🗑️ reset today</button></div>
     <p class="muted tiny" style="margin:6px 0 0">${drinkTip(sel, caf)}</p>`;
+  $('#wReset').onclick = resetDrinksToday;
   $('#wEdit').onclick = () => waterGoalModal();
   box.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.lastDrink = b.dataset.k; save(); renderWater(); });
   box.querySelectorAll('.wadd').forEach(b => b.onclick = () => addDrink(+b.dataset.ml, sel));

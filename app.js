@@ -201,7 +201,7 @@ function profileForm(first) {
     <div class="field"><button type="button" class="btn ghost" id="pWater">💧 Water goal: ${S.water?.goal ? S.water.goal / 1000 + ' L' : 'not set'}</button></div>`}
     <div class="warnbox">Fasting isn't safe for everyone. Please talk to a doctor first if you are pregnant/breastfeeding, under 18, have diabetes, heart or kidney problems, take medication, or have a history of eating disorders.</div>
     <button class="btn big" id="pSave">${first ? 'Calculate & start 🌱' : 'Save'}</button>
-    ${first ? '<p class="muted small" style="text-align:center">By continuing you agree to the <a href="legal.html#terms" target="_blank" rel="noopener">Terms</a> and <a href="legal.html#privacy" target="_blank" rel="noopener">Privacy policy</a>. Bloom is for adults 18+.</p>' : '<div class="row gap wrap" style="margin-top:12px"><button class="btn ghost" id="pExport">⬇️ Backup data</button><button class="btn ghost" id="pImport">⬆️ Restore</button><button class="btn ghost" id="pReset" style="color:var(--danger)">Reset all</button></div><button class="btn ghost big" id="pDelAcc" style="margin-top:10px;color:var(--danger)">🗑️ Delete my account</button>' + legalLinks()}
+    ${first ? '<p class="muted small" style="text-align:center">By continuing you agree to the <a href="legal.html#terms" target="_blank" rel="noopener">Terms</a> and <a href="legal.html#privacy" target="_blank" rel="noopener">Privacy policy</a>. Bloom is for adults 18+.</p>' : '<div class="row gap wrap" style="margin-top:12px"><button class="btn ghost" id="pExport">⬇️ Backup data</button><button class="btn ghost" id="pImport">⬆️ Restore</button><button class="btn ghost" id="pReset" style="color:var(--danger)">Reset all</button></div><button class="btn ghost big" id="undoLast" style="margin-top:10px">↩ Undo last change</button><button class="btn ghost big" id="pDelAcc" style="margin-top:10px;color:var(--danger)">🗑️ Delete my account</button>' + legalLinks()}
   `, m => {
     let sex = p.sex;
     if (!first) { hookMsgEvery(m); $('#pWater').onclick = () => waterGoalModal(); }
@@ -220,6 +220,7 @@ function profileForm(first) {
       $('#pExport').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' })); a.download = 'bloom-backup.json'; a.click(); };
       $('#pImport').onclick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = async () => { try { S = Object.assign(load(), JSON.parse(await i.files[0].text())); save(); location.reload(); } catch (e) { toast('That file did not work'); } }; i.click(); };
       $('#pDelAcc').onclick = deleteAccountModal;
+      $('#undoLast').onclick = () => { closeModal(); undoLast(); };
       $('#pReset').onclick = () => { if (confirm('Delete ALL Bloom data on this device? This cannot be undone.')) { localStorage.removeItem(KEY); location.reload(); } };
     }
   });

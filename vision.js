@@ -79,7 +79,8 @@ async function visionEditor() {
       <div class="vgrid" id="vGrid">${thumbs.map(p => `<div class="vthumb" data-id="${p.id}"><img src="${p.img || ''}" alt=""><input value="${esc(p.caption || '')}" placeholder="caption" maxlength="80"><button class="vdel" data-id="${p.id}">✕</button></div>`).join('')}
         <label class="vthumb add"><input type="file" accept="image/*" id="vAdd" hidden multiple>＋<br>Add</label></div></div>
     <button class="btn big" id="vSave">Save my vision board</button>
-    <button class="btn ghost big" style="margin-top:8px" id="vPreview">▶ Preview</button>`, () => {
+    <button class="btn ghost big" style="margin-top:8px" id="vPreview">▶ Preview</button>
+    <button class="btn ghost big" style="margin-top:8px;color:var(--danger)" id="vReset">🗑️ Reset vision board</button>`, () => {
     let inspoNew = null;
     $('#vInspoPic').onchange = async e => { const f = e.target.files[0]; if (!f) return; inspoNew = await shrinkImage(f, 1080); $('#vInspoSlot').style.backgroundImage = `url(${inspoNew})`; $('#vInspoSlot').classList.add('has'); };
     $('#vAdd').onchange = async e => {
@@ -102,6 +103,7 @@ async function visionEditor() {
     };
     $('#vSave').onclick = async () => { await collect(); closeModal(); toast('Vision board saved ✨'); celebrate(); };
     $('#vPreview').onclick = async () => { await collect(); showVision(); };
+    $('#vReset').onclick = () => resetVisionBoard();
   });
 }
 

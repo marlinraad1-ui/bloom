@@ -1065,3 +1065,9 @@ img.ex-anim { width: 100%; height: 100%; object-fit: contain; background: #fff; 
 .caf.over .caf-bar i { background: linear-gradient(90deg, #ff7a00, #ff3b5c); } .caf.over b { color: #ff3b5c; }
 .addrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .addfor { font-weight: 800; font-size: .85rem; margin-right: 4px; }
+
+/* undo chip */
+#undoChip { position: fixed; left: 50%; bottom: 150px; transform: translate(-50%, 140%); z-index: 70; display: flex; gap: 6px; align-items: center; max-width: calc(100vw - 32px);
+  padding: 10px 16px; border-radius: 99px; border: 0; background: var(--text); color: var(--bg); font: 600 .85rem var(--font); box-shadow: 0 8px 24px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s; }
+#undoChip.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+#undoChip span { opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55vw; }
