@@ -1038,3 +1038,30 @@ img.ex-anim { width: 100%; height: 100%; object-fit: contain; background: #fff; 
 .dchip { font-size: .72rem; padding: 3px 8px 3px 6px; border-radius: 99px; background: var(--bg); border: 1px solid var(--border); display: inline-flex; gap: 4px; align-items: center; }
 .dchip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(180deg, var(--c1), var(--c2)); box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
 @media (max-width: 380px) { .dpick { grid-template-columns: repeat(4, 1fr); } .dbtn span { font-size: .6rem; } }
+
+/* drinks v2: own cups */
+.vbtn { background: none; border: 0; padding: 0; border-radius: 18px; }
+.vbtn.on .vglass { box-shadow: 0 0 0 3px color-mix(in srgb, #3aa0ff 45%, transparent), inset 0 0 12px rgba(255,255,255,.6); }
+.cups { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0 8px; }
+.cupbtn { display: grid; justify-items: center; gap: 1px; padding: 6px 2px; border-radius: 14px; border: 2px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); transition: transform .2s; }
+.cupbtn .mcup { height: 46px; width: auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,.15)); }
+.cupbtn .mliq { transition: y .8s cubic-bezier(.2,.8,.2,1), height .8s cubic-bezier(.2,.8,.2,1); }
+.cupbtn .cn { font-size: .66rem; font-weight: 800; line-height: 1.1; text-align: center; }
+.cupbtn .cm { font-size: .6rem; color: var(--muted); }
+.cupbtn .cm b { color: var(--text); }
+.cupbtn.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.cupbtn.on .mcup { transform: translateY(-2px) rotate(-6deg); transition: transform .3s; }
+.cupbtn.over { border-color: #ffb020; }
+.cupbtn.pop .mcup { animation: cupPop .7s cubic-bezier(.2,.8,.2,1); }
+@keyframes cupPop { 30% { transform: scale(1.25) rotate(-10deg); } 60% { transform: scale(.95) rotate(4deg); } }
+.mcup .mb { animation: mfizz 1.8s ease-in infinite; } .mcup .mb2 { animation-delay: .8s; }
+@keyframes mfizz { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-36px); opacity: 0; } }
+.mcup .mst { animation: msteam 2s ease-in-out infinite; }
+@keyframes msteam { 50% { transform: translateY(-2px); opacity: .5; } }
+.caf { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center; font-size: .72rem; margin-top: 6px; }
+.caf-bar { height: 8px; border-radius: 99px; background: var(--ring-bg); overflow: hidden; }
+.caf-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #c9a46a, #7a4a2a); transition: width .6s; }
+.caf.high .caf-bar i { background: linear-gradient(90deg, #ffb020, #ff7a00); }
+.caf.over .caf-bar i { background: linear-gradient(90deg, #ff7a00, #ff3b5c); } .caf.over b { color: #ff3b5c; }
+.addrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.addfor { font-weight: 800; font-size: .85rem; margin-right: 4px; }

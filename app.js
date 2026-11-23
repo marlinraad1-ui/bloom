@@ -580,7 +580,8 @@ async function shareCard() {
 
 // ================= WATER =================
 const DRINKS = { water: '💧 Water', tea: '🍵 Tea', zero: '🥤 Zero drink', coffee: '☕ Coffee', other: '🥛 Other' };
-const waterTotal = (d = day()) => (d.drinks || []).reduce((a, x) => a + x.ml, 0);
+// only plain water counts toward the water goal; other drinks have their own count (water.js)
+const waterTotal = (d = day()) => (d.drinks || []).filter(x => !x.kind || x.kind === 'water').reduce((a, x) => a + x.ml, 0);
 const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 // spread the daily goal over the drinking hours, step by step
 function waterItems() {
