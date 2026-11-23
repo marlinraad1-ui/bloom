@@ -119,13 +119,14 @@ function heroVid(w) {
 // VIP workout page
 function workoutPage(w) {
   if (!isVip()) return vipModal('workouts');
-  const per = w.min * 60 / w.moves.length, kcal = Math.round(workoutKcal(w, w.min));
+  const sum = planSummary(w), kcal = Math.round(workoutKcal(w, w.min));
   openModal(`<div class="wk-hero"><button class="wk-back" onclick="closeModal()">‹</button>${heroVid(w)}
       <h1 class="wk-title">${esc(w.name)}</h1></div>
     <div class="wk-stats"><div>⏱️ <b>${w.min}</b> mins</div><span></span><div>⚡ <b>${kcal}</b> calories</div></div>
     <div class="wk-tags">${w.jump ? '<span class="chip">🦘 Has jumping</span>' : '<span class="chip">🤫 No jumping</span>'}${(w.needs || []).map(g => { const x = GEAR.find(y => y[0] === g); return `<span class="chip">${x[1]} ${x[2]}</span>`; }).join('')}<span class="chip">🔥 ${Math.round(kcal / 7.7)} g fat</span></div>
+    <div class="wk-plan">⏱️ ${esc(sum.text)}</div>
     <h3 class="wk-h">Exercises (${w.moves.length})</h3>
-    <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m, '', w)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
+    <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m, '', w)}</div><div><b>${esc(m)}</b><span class="muted small">${sum.per(m)}</span></div></div>`).join('')}</div>
     <p class="muted small wk-video">Tap an exercise to see how to do it.<br><span class="tiny">Videos from Pexels and YouTube. Animations from LottieFiles artists.</span></p>
     <div class="wk-go"><button class="btn big" id="wkStart">▶ Start Now</button></div>`, m => {
     m.classList.add('full', 'wk-page');

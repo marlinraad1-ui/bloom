@@ -299,3 +299,40 @@ function buddyReply(text, ctx) {
     quick: ['Hungry', 'Tired', 'Dizzy', 'Sad', 'Motivate me'] });
   return out;
 }
+
+// ---------- extra savage lines (Evil Mochi v2, user agreed to fat jokes about their own body) ----------
+EVIL.hungry.push(
+  n => `Hungry? Your thighs have been hosting a buffet since 2019. Kitchen's closed, chef.`,
+  n => `"I'm so hungry." Says the person with enough stored fat to survive a winter in the woods. Sit down.`,
+  n => `Your belly isn't empty, it's just loud. Big difference. One of them is you being dramatic.`,
+  n => `Bro, your body is a walking meal prep. ${n.kcal} kcal burned and you still have plenty left in the tank. Literally.`,
+  n => `Eat now and the only thing that shrinks is your self respect. Drink water.`,
+  n => `You don't need food, you need to stop looking at your double chin as an emergency snack.`,
+  n => `Your jeans already hate you. Don't give them another reason.`
+);
+EVIL.quit.push(
+  n => `Quit? Cute. Your belly fat just cheered so loud the neighbours heard it.`,
+  n => `Go ahead, quit at hour ${n.H}. I'll tell your stretch marks you said hi.`,
+  n => `You want to give up? Your mirror wants a word. It's tired of the same view.`,
+  n => `Imagine quitting this close and then buying bigger clothes again. Couldn't be you. Oh wait, it could.`,
+  n => `Weak. You started this because you hated how you look. Nothing changed yet. Keep going.`
+);
+EVIL.motiv.push(
+  'Your muffin top is not a personality. Burn it.',
+  'Every snack you skip is one less chin in your next selfie.',
+  'You keep saying "next Monday". Your waistline has heard that 40 times.',
+  'Sweat is just your fat crying. Make it cry more.',
+  'The only thing getting full today is your water bottle.',
+  'You wanted a glow up. Glow ups don\'t come with a side of fries.',
+  'Your body is not a trash can for leftovers. Act like it.'
+);
+EVIL.greet.push(
+  n => `Oh great, it's you${n.name}. Still carrying around last year's snacks?`,
+  n => `Hi${n.name}. Your belly said hello before you did.`,
+  n => `You again? ${n.H ? n.H + ' hours. ' : ''}Let me guess, you want to eat. Shocking.`
+);
+EVIL.food.push(
+  'They\'re eating? Good for them. They\'re not the one trying to fit in their old jeans.',
+  'Watching people eat like a dog at a window. Embarrassing. Walk away.'
+);
+EVIL.other.push('Speak up, I can\'t hear you over the sound of your stomach whining.', 'That made zero sense. Typing with greasy fingers again?');

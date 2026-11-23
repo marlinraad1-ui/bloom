@@ -114,18 +114,35 @@ const THEMES = {
   goddess: { name: 'Greek Goddess', desc: 'White marble, gold and laurel. Divine.', mascot: '🏛️', color: '#c9a227', bg: 'linear-gradient(135deg,#fffaf0,#efe4c8)', fg: '#6b5320', font: "'Cinzel'" },
   rosegold: { name: 'Rose Gold Luxe', desc: 'Champagne, rose gold and diamonds', mascot: '💎', color: '#b76e79', bg: 'linear-gradient(135deg,#fff6f2,#f6dcd3)', fg: '#5a2f33', font: "'Playfair Display'" },
   sakuranight: { name: 'Midnight Sakura', desc: 'Moonlit night with falling petals', mascot: '🌙', color: '#141a38', bg: 'linear-gradient(135deg,#141a38,#2d1d48)', fg: '#ffb3d1', font: "'Fredoka'" },
+  angel: { name: 'Angel', desc: 'Heavenly white, gold halos, feathers and soft light', mascot: '👼', color: '#d4af37', bg: 'radial-gradient(circle at 50% 0%,#ffffff,#fff4d6 45%,#e9efff)', fg: '#4a4560', font: "'Great Vibes'" },
+  dollhouse: { name: 'Dollhouse Pink', desc: 'Hot pink gingham, bows and doll glam', mascot: '🎀', color: '#ff3d9a', bg: 'linear-gradient(135deg,#ffd1e8,#fff5fa)', fg: '#8a1650', font: "'Lobster'" },
+  animesky: { name: 'Anime Sky', desc: 'Big blue sky and fluffy drifting clouds', mascot: '☁️', color: '#3fa2ff', bg: 'linear-gradient(180deg,#6fc3ff,#fff4e0)', fg: '#173a63', font: "'Dela Gothic One'" },
+  blackdiamond: { name: 'Black Diamond', desc: 'Pure black luxury with platinum shine', mascot: '💎', color: '#050507', bg: 'linear-gradient(135deg,#050507,#23232b)', fg: '#e8e8f0', font: "'Bebas Neue'" },
+  y2k: { name: 'Y2K Butterfly', desc: 'Holographic chrome, sparkles and butterflies', mascot: '🦋', color: '#9b5cff', bg: 'linear-gradient(125deg,#c9f7ff,#ffd6f9,#e6ffb3)', fg: '#2b1c5a', font: "'Audiowide'" },
+  cherrycola: { name: 'Cherry Cola', desc: 'Deep cherry red, fizzy bubbles, retro diner', mascot: '🍒', color: '#7a0f22', bg: 'linear-gradient(135deg,#3b0710,#7a0f22)', fg: '#ffcf6b', font: "'Shrikhand'" },
+  mermaid: { name: 'Mermaid Lagoon', desc: 'Turquoise water, shimmering scales and shells', mascot: '🧜‍♀️', color: '#12b5a6', bg: 'linear-gradient(160deg,#c8fff6,#e1d6ff)', fg: '#164a5a', font: "'Sail'" },
+  lavender: { name: 'Lavender Fields', desc: 'Soft purple flower fields and calm', mascot: '💜', color: '#9b7ede', bg: 'linear-gradient(180deg,#efe6ff,#eef7e8)', fg: '#4b3a6b', font: "'Dancing Script'" },
+  vaporwave: { name: 'Vaporwave', desc: 'Retro 80s sunset grid, palms and neon', mascot: '🌴', color: '#1a0933', bg: 'linear-gradient(180deg,#1a0933,#ff71ce)', fg: '#01cdfe', font: "'Monoton'" },
+  academia: { name: 'Dark Academia', desc: 'Old library, candlelight, books and autumn leaves', mascot: '📜', color: '#2b2118', bg: 'linear-gradient(135deg,#1c150f,#4a3828)', fg: '#c9a46a', font: "'IM Fell English'" },
   simple: { name: 'Simple', desc: 'Clean, no distractions', mascot: '', color: '#2563eb', bg: '#fff', fg: '#1d2430', font: 'system-ui' }
 };
 const VIP_THEMES = Object.keys(THEMES).filter(k => k !== 'kawaii'); // only Kawaii is free
-const UPCOMING_THEMES = [['🎀', 'Dollhouse Pink'], ['☁️', 'Anime Sky'], ['🖤', 'Black Diamond'], ['🦋', 'Y2K Butterfly'], ['🍒', 'Cherry Cola']];
+const UPCOMING_THEMES = [['🧚', 'Fairy Garden'], ['🍓', 'Strawberry Milk'], ['🌌', 'Northern Lights']];
+// each theme's own fonts, loaded only when that theme is used
+const THEME_FONTS = {"kawaii": "family=Mochiy+Pop+One&family=Nunito:wght@400;700", "dark": "family=Playfair+Display:wght@400;700&family=Inter:wght@400;700", "ocean": "family=Comfortaa:wght@400;700&family=Quicksand:wght@400;700", "matcha": "family=Fredoka:wght@400;700&family=Karla:wght@400;700", "peach": "family=Pacifico&family=Poppins:wght@400;700", "galaxy": "family=Orbitron:wght@400;700&family=Space+Grotesk:wght@400;700", "neon": "family=Bungee&family=Rubik:wght@400;700", "goddess": "family=Cinzel:wght@400;700&family=Lora:wght@400;700&family=Cinzel+Decorative", "rosegold": "family=Bodoni+Moda:wght@400;700&family=Jost:wght@400;700", "sakuranight": "family=Kaisei+Decol&family=Zen+Maru+Gothic:wght@400;700", "simple": "", "angel": "family=Marcellus&family=Cormorant+Garamond:wght@400;700&family=Great+Vibes", "dollhouse": "family=Lobster&family=Varela+Round", "animesky": "family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700", "blackdiamond": "family=Bebas+Neue&family=Montserrat:wght@400;700", "y2k": "family=Audiowide&family=Chakra+Petch:wght@400;700", "cherrycola": "family=Shrikhand&family=DM+Sans:wght@400;700", "mermaid": "family=Sail&family=Mulish:wght@400;700", "lavender": "family=Dancing+Script:wght@400;700&family=Nunito+Sans:wght@400;700", "vaporwave": "family=Righteous&family=Share+Tech+Mono&family=Monoton", "academia": "family=IM+Fell+English&family=EB+Garamond:wght@400;700"};
+function loadThemeFonts(keys) {
+  const q = keys.map(k => THEME_FONTS[k]).filter(Boolean).join('&'); if (!q) return;
+  const id = 'tf-' + keys.join('-').slice(0, 60); if (document.getElementById(id)) return;
+  const l = document.createElement('link'); l.rel = 'stylesheet'; l.id = id; l.href = 'https://fonts.googleapis.com/css2?' + q + '&display=swap'; document.head.appendChild(l);
+}
 const theme = () => THEMES[S.theme] || THEMES.kawaii;
 function applyTheme() {
   if (!THEMES[S.theme] || (VIP_THEMES.includes(S.theme) && !isVip())) S.theme = 'kawaii';
-  document.documentElement.dataset.theme = S.theme;
+  document.documentElement.dataset.theme = S.theme; loadThemeFonts([S.theme]);
   document.querySelector('meta[name=theme-color]').content = theme().color;
   const b = BUDDY[S.persona] || BUDDY.sweet; $('#buddyFace').textContent = b.face; $('#buddyName').textContent = b.name;
 }
-$('#themeBtn').onclick = () => openModal(`
+$('#themeBtn').onclick = () => (loadThemeFonts(Object.keys(THEMES)), openModal(`
   <h2>Choose your style</h2>
   <div class="theme-grid">${Object.entries(THEMES).map(([k, t]) => `
     <button data-t="${k}" class="theme-card ${S.theme === k ? 'on' : ''}" style="background:${t.bg};color:${t.fg}">
@@ -140,7 +157,7 @@ $('#themeBtn').onclick = () => openModal(`
       S.theme = b.dataset.t; save(); applyTheme(); renderAll(); closeModal();
     });
     if ($('#thVip')) $('#thVip').onclick = () => vipModal('themes');
-  });
+  }));
 
 // ================= NAV =================
 document.querySelectorAll('.tabbar button').forEach(b => b.onclick = () => showView(b.dataset.view));
@@ -254,7 +271,7 @@ function startFastModal() {
     <div class="field"><label>Started at (only change this if you started earlier)</label><input type="datetime-local" id="fStart" value="${now.toISOString().slice(0, 16)}"></div>
     <div class="field"><label>Why are you fasting? (Mochi reminds you when it's hard)</label><input id="fReason" placeholder="e.g. religious reasons, spirituality, weight loss" value="${esc(S.lastReason || '')}"></div>
     <div class="warnbox" id="fWarn"></div>
-    <label class="small" id="fLongOk" hidden style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="fLongChk" style="width:auto"> I understand fasting over 7 days is risky and should be checked by a doctor.</label>
+    <label class="small" id="fLongOk" hidden style="flex-direction:row;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="fLongChk" style="width:auto"> I'm 18+, I understand fasts over 3 days (max 15) carry real health risks, a doctor should check me first, and I do this at my own risk as in the <a href="legal.html#terms" target="_blank" rel="noopener">Terms</a>.</label>
     <button class="btn big" id="fGo">Start fasting ✨</button>`, m => {
     let edited = false, custom = false;
     $('#fStart').oninput = () => { edited = true; };
@@ -267,7 +284,7 @@ function startFastModal() {
       $('#fWarn').innerHTML = goal > 168
         ? `<b>${(goal / 24).toFixed(goal % 24 ? 1 : 0)} days is a very long fast.</b> Past 7 days the risk of electrolyte problems and refeeding syndrome goes up a lot. Please get a doctor's OK, take electrolytes every day, rest a lot, and break the fast very slowly. Mochi will check on you often.`
         : `Fasts longer than 3 days: take electrolytes daily (salt, potassium, magnesium), keep workouts gentle from day 3, and break the fast slowly. Fasts over 5 days are best done with a doctor's OK.`;
-      $('#fLongOk').hidden = goal <= 168;
+      $('#fLongOk').hidden = goal <= 72;
     };
     m.querySelectorAll('#fType button').forEach(b => b.onclick = () => { type = b.dataset.v; m.querySelectorAll('#fType button').forEach(x => x.classList.toggle('on', x === b)); upd(); });
     m.querySelectorAll('#fGoal button').forEach(b => b.onclick = () => {
@@ -282,7 +299,8 @@ function startFastModal() {
     };
     upd();
     $('#fGo').onclick = () => {
-      if (goal > 168 && !$('#fLongChk').checked) return toast('Please tick the box first');
+      if (goal > 72 && !$('#fLongChk').checked) return toast('Please accept the risk agreement first');
+      if (goal > 72) S.longFastAgreed = Date.now();
       const picked = new Date($('#fStart').value).getTime();
       const st = edited && picked ? Math.min(picked, Date.now()) : Date.now();
       S.lastReason = $('#fReason').value.trim();
@@ -1055,16 +1073,17 @@ function personaModal() {
 }
 function evilTerms() {
   openModal(`<h2>😈 Evil Mochi terms</h2>
-    <p>Evil Mochi uses <b>toxic motivation</b>. That means:</p>
+    <p>Evil Mochi is <b>toxic on purpose</b>. That means:</p>
     <ul class="small">
-      <li>It can be harsh, rude and sarcastic.</li>
-      <li>It makes jokes about your fat, your excuses and your cravings.</li>
-      <li>It may feel like bullying. That's on purpose, to push you.</li>
+      <li>It is harsh, rude, sarcastic and insulting.</li>
+      <li><b>It makes fat jokes and comments about your body, weight, belly, thighs and chins.</b> This can feel like fat shaming.</li>
+      <li>It mocks your excuses, cravings and quitting. It may feel like bullying. That's the point.</li>
+      <li>You use it at your own risk. If jokes about your body could hurt you, or you have or had an eating disorder, <b>do not use it. Use Sweet Mochi instead.</b></li>
       <li>It's a joke character, not a real opinion about you.</li>
       <li>If you say you feel sick, faint, sad or unsafe, it drops the act and helps you for real.</li>
       <li>You can switch back to Sweet Mochi any time.</li>
     </ul>
-    <label class="small" style="flex-direction:row;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="evilOk" style="width:auto"> I am 18 or older, I understand all of this, and I want Evil Mochi anyway.</label>
+    <label class="small" style="flex-direction:row;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="evilOk" style="width:auto"> I am 18 or older. I agree that Evil Mochi is toxic and may fat shame me, and I choose it at my own risk. If I don't agree, I'll use Sweet Mochi.</label>
     <div class="row gap"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" id="evilGo" disabled>I agree, unleash it 😈</button></div>`, () => {
     $('#evilOk').onchange = e => $('#evilGo').disabled = !e.target.checked;
     $('#evilGo').onclick = () => { S.evilAgreed = true; closeModal(); setPersona('evil'); };
