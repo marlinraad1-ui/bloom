@@ -70,6 +70,8 @@ function animFor(m, w) {
 const exPic = (m, cls = '', w) => {
   const a = animFor(m, w);
   const lot = a ? `<div class="lot ${cls}" data-a="${a}" data-fallback="${moveIcon(m)}" role="img" aria-label="${esc(m)}"></div>` : moveIcon(m);
+  const y = navigator.onLine && typeof ytFor === 'function' ? ytFor(m) : null;
+  if (y) return cls === 'big' ? ytHTML(y) : `<span class="ytthumb"><img class="vthumb" src="${ytThumb(y)}" alt="${esc(m)}" loading="lazy"><b>▶</b></span>`;
   const v = navigator.onLine && typeof vidFor === 'function' ? vidFor(m, w) : null;
   if (!v) return lot;
   return cls === 'big' ? videoHTML(v, lot)
@@ -124,7 +126,7 @@ function workoutPage(w) {
     <div class="wk-tags">${w.jump ? '<span class="chip">🦘 Has jumping</span>' : '<span class="chip">🤫 No jumping</span>'}${(w.needs || []).map(g => { const x = GEAR.find(y => y[0] === g); return `<span class="chip">${x[1]} ${x[2]}</span>`; }).join('')}<span class="chip">🔥 ${Math.round(kcal / 7.7)} g fat</span></div>
     <h3 class="wk-h">Exercises (${w.moves.length})</h3>
     <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m, '', w)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
-    <p class="muted small wk-video">Tap an exercise to see how to do it.<br><span class="tiny">Videos from Pexels. Animations from LottieFiles artists.</span></p>
+    <p class="muted small wk-video">Tap an exercise to see how to do it.<br><span class="tiny">Videos from Pexels and YouTube. Animations from LottieFiles artists.</span></p>
     <div class="wk-go"><button class="btn big" id="wkStart">▶ Start Now</button></div>`, m => {
     m.classList.add('full', 'wk-page');
     $('#wkStart').onclick = () => { m.classList.remove('full', 'wk-page'); playWorkout(w); };
@@ -154,9 +156,14 @@ renderWorkouts = function () {
       <span class="bp-main"><span class="bp-emoji">${best.emoji}</span><span><b>${esc(best.name)}</b><br><span class="small">⏱️ ${best.min} min · ⚡ ${Math.round(workoutKcal(best, best.min))} kcal · ${best.jump ? 'has jumping' : 'no jumping'}</span></span></span>
       <span class="small muted">The biggest burn with what you have at home${S.fast ? ' and safe for today\'s fast' : ''}.</span></button>`);
   if ($('#bestPick')) $('#bestPick').onclick = () => workoutPage(best);
+  if (!isVip()) $('#workoutHint').insertAdjacentHTML('afterend', `<button class="btn big vip-btn wk-unlock" onclick="vipModal('workouts')">👑 Unlock every workout with VIP</button>`);
   // VIP: tap a workout to open its page
   $('#workoutList').querySelectorAll('.workout').forEach(card => {
     const id = card.querySelector('[data-w]')?.dataset.w; if (!id) return;
+    if (!isVip()) {
+      card.classList.add('locked');
+      card.querySelectorAll('[data-w], [data-log]').forEach(b => { b.onclick = () => vipModal('workouts'); if (b.dataset.w) b.textContent = '🔒 Start'; });
+    }
     card.querySelector('.w-name').insertAdjacentHTML('beforeend', ' <button class="linkbtn wk-open" title="Workout page">📋</button>');
     card.querySelector('.wk-open').onclick = () => workoutPage(WORKOUTS.find(w => w.id === id));
     if (isVip()) card.querySelector('[data-w]').onclick = () => workoutPage(WORKOUTS.find(w => w.id === id));

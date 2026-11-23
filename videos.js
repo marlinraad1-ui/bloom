@@ -98,3 +98,22 @@ function videoHTML(id, fallbackHTML) {
   const v = VIDEOS[id];
   return `<video class="vid ${v[2] ? 'tall' : ''}" src="${vidSrc(id)}" poster="${vidThumb(id)}" muted autoplay loop playsinline preload="auto" data-fb="${esc(fallbackHTML)}" onerror="this.outerHTML=this.dataset.fb"></video>`;
 }
+
+// Dance combos and moves with nothing else: a YouTube follow-along video, played inside Bloom
+// with YouTube's own embedded player (videos stay on YouTube, creators keep their views).
+// (label blocked = the song's label doesn't allow playing inside apps, so we show a "Watch on YouTube" button)
+const YT_RULES = [
+  [/how you like that/i, 'aN40rfjL8z8', 'out'], [/ddu-du/i, '7w0EdrUdTfk', 'out'], [/pink venom/i, 'js6lix_5L_w', 'out'],
+  [/dynamite/i, 'J6_kvaXmv7c', 'out'], [/butter/i, 'vvc-GlHWZfs', 'out'], [/^fire combo/i, 'gEAlws_VUbc', 'out'],
+  [/^tt combo/i, 'W89srLOcaI8'], [/fancy/i, 'X57hKu5aVd8', 'out'], [/hype boy/i, '9J4QexXpgY4'], [/super shy/i, 'v0IGFWtPjx8', 'out'],
+  [/god's menu/i, 'PYdayEL013I'], [/s-class/i, 'yev318PhbY0'], [/guerrilla/i, 'gQKufh2hl9w'], [/bouncy/i, 'otDg5G7NQAw'],
+  [/next level/i, 't4njdaBAPv8'], [/supernova/i, 'kW6v26f6T7I'], [/wannabe/i, '49GTdzIX14w'], [/dalla dalla/i, '2JN07Ea183Y'],
+  [/^(warm up groove|combo \d|freestyle)$/i, 'Z3r2zJ97NB4'],
+  [/hanging knee/i, 'p9hhX_Sx5v0'],
+];
+const ytFor = m => { const r = YT_RULES.find(([re]) => re.test(m)); return r ? r[1] : null; };
+const ytOut = id => YT_RULES.some(r => r[1] === id && r[2] === 'out');
+const ytThumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+const ytHTML = id => ytOut(id)
+  ? `<a class="ytout" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt=""><span>▶ Watch on YouTube</span><small>This song can only play on YouTube</small></a>`
+  : `<iframe class="yt" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=${id}" title="Exercise video" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;

@@ -28,6 +28,7 @@ function burnPlanHTML(over) {
 }
 function hookBurnPlan(root) {
   root.querySelectorAll('[data-bp]').forEach(b => b.onclick = () => {
+    if (!isVip()) return vipModal('workouts');
     const w = WORKOUTS.find(x => x.id === b.dataset.bp);
     playWorkout({ ...w, min: +b.dataset.min });
   });

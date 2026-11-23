@@ -7,7 +7,7 @@
 const VIP_PRICE = '$22.99';
 const VIP_PERKS = [
   ['🎨', 'Every theme', 'Rose Gold Luxe, Midnight Sakura, Greek Goddess, Galaxy, K-pop Neon, Dark, Ocean and all new themes first'],
-  ['🏋️', 'Pro workout pages', 'Every exercise with timing and calories, plus the best workout for the gear you have at home'],
+  ['🏋️', 'Every workout', 'K-pop dance, HIIT, home and gym workouts with real people showing every move, plus the best workout for the gear you have at home'],
   ['📸', 'Snap your meal', 'Take a photo and Bloom counts the calories, protein, carbs and fat'],
   ['💬', 'AI calorie chat', 'Just text what you ate. "2 eggs and a latte" is enough'],
   ['🔥', 'Ate too much? Burn plan', 'Exactly which workouts and how many minutes to walk so you don\'t gain'],
@@ -17,7 +17,7 @@ const VIP_PERKS = [
 ];
 
 function vipModal(reason) {
-  const top = { themes: '🎨 This theme is for VIP', food: '📸 The AI food calculator is VIP', analyzer: '🔬 The body analyzer is VIP', workouts: '🏋️ Pro workout pages are VIP', profile: '🎬 Live profiles are VIP' }[reason];
+  const top = { themes: '🎨 This theme is for VIP', food: '📸 The AI food calculator is VIP', analyzer: '🔬 The body analyzer is VIP', workouts: '🏋️ Workouts are VIP', profile: '🎬 Live profiles are VIP' }[reason];
   openModal(`<div class="vip-sheet">
     <div class="vip-hero">👑</div>
     ${top ? `<p class="vip-why">${top}</p>` : ''}
