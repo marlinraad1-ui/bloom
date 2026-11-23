@@ -25,38 +25,74 @@ function vipModal(reason) {
     <p class="vip-price"><b>${VIP_PRICE}</b> / year <span class="muted small">· less than $2 a month</span></p>
     <div class="vip-perks">${VIP_PERKS.map(([e, t, d]) => `<div class="vip-perk"><span class="vp-e">${e}</span><div><b>${t}</b><p class="muted small">${d}</p></div></div>`).join('')}</div>
     ${isVip()
-      ? `<div class="auth-note">👑 You're VIP${S.community?.is_dev ? ' forever (developer)' : S.community?.vip_until ? ' until ' + new Date(S.community.vip_until).toLocaleDateString() : ''}. Everything is open. Enjoy!</div>`
+      ? `<div class="auth-note">👑 You're VIP${S.community?.is_dev ? ' forever (developer)' : S.community?.vip_until ? ' until ' + new Date(S.community.vip_until).toLocaleDateString() : ''}. Everything is open. Enjoy!</div>${S.community?.is_dev ? '' : '<button class="btn ghost big" id="vipManage">Manage or cancel my VIP</button>'}`
       : `<button class="btn big vip-btn" id="vipGo">👑 Get VIP · ${VIP_PRICE} / year</button>
          <button class="btn ghost big" id="vipLogin">Already VIP? Log in</button>`}
-    <p class="muted small" style="text-align:center">Fasting, water, workouts, Mochi and the community stay free forever.</p>
+    <p class="muted small" style="text-align:center">🔒 Secure payment by Stripe. Renews yearly, cancel anytime in one tap.<br>Fasting, water, steps, Mochi and the community stay free forever.</p>
     <button class="btn ghost big" onclick="closeModal()">${isVip() ? 'Close' : 'Maybe later'}</button>
   </div>`, () => {
     if ($('#vipGo')) $('#vipGo').onclick = vipBuy;
+    if ($('#vipManage')) $('#vipManage').onclick = vipManage;
     if ($('#vipLogin')) $('#vipLogin').onclick = () => { closeModal(); showView('community'); setTimeout(() => { if (!$('#authPanel').hidden) renderAuth('login'); }, 900); };
   });
 }
 
-// Payments are not switched on yet. Be honest about it and remember who wanted VIP.
+// ---------- paying with Stripe (server function "vip" holds the Stripe key) ----------
+async function vipCall(action) {
+  if (!navigator.onLine) throw new Error('offline');
+  if (!(await commInit())) throw new Error('offline');
+  const r = await sb.functions.invoke('vip', { body: { action, return: location.origin + location.pathname } });
+  if (r.error) { let j = null; try { j = await r.error.context?.json?.(); } catch (e) {} throw new Error(j?.error || 'failed'); }
+  return r.data;
+}
+const openOut = url => { if (window.Capacitor?.isNativePlatform?.()) window.open(url, '_blank'); else location.href = url; };
+
 async function vipBuy() {
   S.vipWanted = S.vipWanted || Date.now(); save();
   const u = window.currentUser ? await currentUser().catch(() => null) : null;
-  openModal(`<div class="vip-sheet"><div class="vip-hero">🎉</div><h2 class="vip-title">VIP is almost here!</h2>
-    <p>We're switching on secure payments right now. You'll get a message in Bloom the moment you can join.</p>
-    ${isRealUser(u) ? '' : '<div class="auth-note">💡 Make a free account on the People tab now, so your VIP is saved to it and works on every device.</div>'}
-    <button class="btn big" onclick="closeModal()">Okay 💖</button></div>`);
+  if (!isRealUser(u)) {
+    return openModal(`<div class="vip-sheet"><div class="vip-hero">🔐</div><h2 class="vip-title">One quick step</h2>
+      <p>Make a free Bloom account first, so your VIP is saved to it and works on every phone and computer.</p>
+      <button class="btn big" id="vbAcc">Create my account</button><button class="btn ghost big" onclick="closeModal()">Later</button></div>`,
+      () => { $('#vbAcc').onclick = () => { closeModal(); showView('community'); }; });
+  }
+  const btn = $('#vipGo'); if (btn) { btn.disabled = true; btn.textContent = 'Opening secure checkout…'; }
+  try {
+    const d = await vipCall('checkout');
+    if (d.already) { await refreshVip(true); closeModal(); return toast('👑 You already have VIP!'); }
+    S.vipPending = Date.now(); save();
+    openOut(d.url);
+    if (window.Capacitor?.isNativePlatform?.()) openModal(`<div class="vip-sheet"><div class="vip-hero">💳</div><h2 class="vip-title">Finish in your browser</h2>
+      <p>Pay on the secure Stripe page that just opened. Then come back here and VIP turns on by itself.</p>
+      <button class="btn big" id="vbDone">I paid ✨</button></div>`, () => { $('#vbDone').onclick = async () => { closeModal(); await refreshVip(true); if (!isVip()) toast('Not active yet. Give it a minute and tap the 👑 again.'); }; });
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = `👑 Get VIP · ${VIP_PRICE} / year`; }
+    openModal(`<div class="vip-sheet"><div class="vip-hero">🎉</div><h2 class="vip-title">VIP is almost here!</h2>
+      <p>${e.message === 'not_configured' ? 'Secure payments are being switched on right now. You\'ll be able to join very soon.' : e.message === 'offline' ? 'You\'re offline. Connect to the internet and try again.' : 'Couldn\'t open checkout. Try again in a moment.'}</p>
+      <button class="btn big" onclick="closeModal()">Okay 💖</button></div>`);
+  }
+}
+
+async function vipManage() {
+  try { const d = await vipCall('portal'); openOut(d.url); }
+  catch (e) { toast(e.message === 'no_customer' ? 'Your VIP was a gift, nothing to manage 🎁' : 'Couldn\'t open. Try again later.'); }
 }
 
 // refresh VIP status from the server (only if this phone already has a login)
-async function refreshVip() {
+async function refreshVip(force) {
   try {
     if (!navigator.onLine || !window.SUPA_URL) return;
     if (!Object.keys(localStorage).some(k => /^sb-.*-auth-token$/.test(k))) return;
     if (!(await commInit())) return;
+    const u = (await sb.auth.getUser()).data.user;
+    if (isRealUser(u) && (force || S.vipPending || Date.now() - (S.vipSync || 0) > 12 * 3600e3)) {
+      try { await vipCall('sync'); S.vipSync = Date.now(); if (S.vipPending && Date.now() - S.vipPending > 3600e3) delete S.vipPending; save(); } catch (e) {}
+    }
     const { data } = await sb.from('profiles').select('is_dev, vip_until, banner, name_fx, ring').eq('id', me).maybeSingle();
     if (!data) return;
     const was = isVip();
     Object.assign(comm(), data); save();
-    if (was !== isVip()) { applyTheme(); renderAll(); if (isVip()) { celebrate(); toast('👑 Welcome to VIP!'); } }
+    if (was !== isVip()) { applyTheme(); renderAll(); if (isVip()) { delete S.vipPending; save(); celebrate(); toast('👑 Welcome to VIP!'); } }
   } catch (e) {}
 }
 
@@ -227,4 +263,14 @@ function vipCustomizer() {
   });
 }
 
+// back from Stripe checkout
+(function vipReturn() {
+  const q = new URLSearchParams(location.search).get('vip'); if (!q) return;
+  history.replaceState(null, '', location.pathname);
+  if (q === 'cancel') return toast('No worries, nothing was charged 💖');
+  S.vipPending = Date.now(); save();
+  openModal(`<div class="vip-sheet"><div class="vip-hero">👑</div><h2 class="vip-title">Thank you!</h2><p>Turning on your VIP…</p></div>`);
+  let n = 0; const t = setInterval(async () => { n++; await refreshVip(true); if (isVip() || n > 8) { clearInterval(t); closeModal(); if (isVip()) vipModal(); else toast('Payment received. VIP will turn on in a minute.'); } }, 2500);
+})();
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.vipPending) refreshVip(true); });
 refreshVip();
