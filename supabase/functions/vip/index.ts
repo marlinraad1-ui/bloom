@@ -42,7 +42,14 @@ function safeReturn(u: unknown) {
 
 async function customerFor(user: { id: string; email: string }, create: boolean) {
   const rows = await db(`vip_billing?user_id=eq.${user.id}&select=stripe_customer`);
-  if (rows?.[0]?.stripe_customer) return rows[0].stripe_customer as string;
+  if (rows?.[0]?.stripe_customer) {
+    // a customer saved in test mode doesn't exist in live mode (or was deleted): forget it
+    try { await stripe(`customers/${rows[0].stripe_customer}`, {}, 'GET'); return rows[0].stripe_customer as string; }
+    catch (e) {
+      if (!/no such customer/i.test(String((e as Error).message))) throw e;
+      await db(`vip_billing?user_id=eq.${user.id}`, { method: 'DELETE' });
+    }
+  }
   if (!create) return null;
   const c = await stripe('customers', { email: user.email, 'metadata[supabase_uid]': user.id });
   await db('vip_billing', { method: 'POST', body: JSON.stringify({ user_id: user.id, stripe_customer: c.id }) });
