@@ -66,7 +66,15 @@ function animFor(m, w) {
   if (w && (w.needs || []).includes('treadmill')) return 'treadmill';
   return exFor(m);
 }
-const exPic = (m, cls = '', w) => { const a = animFor(m, w); return a ? `<div class="lot ${cls}" data-a="${a}" data-fallback="${moveIcon(m)}" role="img" aria-label="${esc(m)}"></div>` : moveIcon(m); };
+// real person video (Pexels) first, animation if there's no video or no internet, icon last
+const exPic = (m, cls = '', w) => {
+  const a = animFor(m, w);
+  const lot = a ? `<div class="lot ${cls}" data-a="${a}" data-fallback="${moveIcon(m)}" role="img" aria-label="${esc(m)}"></div>` : moveIcon(m);
+  const v = navigator.onLine && typeof vidFor === 'function' ? vidFor(m, w) : null;
+  if (!v) return lot;
+  return cls === 'big' ? videoHTML(v, lot)
+    : `<img class="vthumb" src="${vidThumb(v)}" alt="${esc(m)}" loading="lazy" data-fb="${esc(lot)}" onerror="this.outerHTML=this.dataset.fb">`;
+};
 const playerVisual = (m, w) => isVip() ? exPic(m, 'big', w) : moveIcon(m);
 
 // how to do one exercise (VIP)
@@ -101,17 +109,22 @@ function gearModal() {
   });
 }
 
+// big real video at the top of the workout page (first move that has one)
+function heroVid(w) {
+  const m = navigator.onLine && typeof vidFor === 'function' ? w.moves.find(x => !/rest|recover|cool down|warm up/i.test(x) && vidFor(x, w)) : null;
+  return m ? `<video class="wk-herovid" src="${vidSrc(vidFor(m, w))}" poster="${vidThumb(vidFor(m, w))}" muted autoplay loop playsinline onerror="this.remove()"></video>` : `<div class="wk-big">${w.emoji}</div>`;
+}
 // VIP workout page
 function workoutPage(w) {
   if (!isVip()) return vipModal('workouts');
   const per = w.min * 60 / w.moves.length, kcal = Math.round(workoutKcal(w, w.min));
-  openModal(`<div class="wk-hero"><button class="wk-back" onclick="closeModal()">‹</button><div class="wk-big">${w.emoji}</div>
+  openModal(`<div class="wk-hero"><button class="wk-back" onclick="closeModal()">‹</button>${heroVid(w)}
       <h1 class="wk-title">${esc(w.name)}</h1></div>
     <div class="wk-stats"><div>⏱️ <b>${w.min}</b> mins</div><span></span><div>⚡ <b>${kcal}</b> calories</div></div>
     <div class="wk-tags">${w.jump ? '<span class="chip">🦘 Has jumping</span>' : '<span class="chip">🤫 No jumping</span>'}${(w.needs || []).map(g => { const x = GEAR.find(y => y[0] === g); return `<span class="chip">${x[1]} ${x[2]}</span>`; }).join('')}<span class="chip">🔥 ${Math.round(kcal / 7.7)} g fat</span></div>
     <h3 class="wk-h">Exercises (${w.moves.length})</h3>
     <div class="wk-list">${w.moves.map((m, i) => `<div class="wk-ex" data-i="${i}"><div class="wk-thumb">${exPic(m, '', w)}</div><div><b>${esc(m)}</b><span class="muted small">${fmtMS(per)} · move ${i + 1}</span></div></div>`).join('')}</div>
-    <p class="muted small wk-video">Tap an exercise to see how to do it.<br><span class="tiny">Animations from LottieFiles artists, Lottie Simple License.</span></p>
+    <p class="muted small wk-video">Tap an exercise to see how to do it.<br><span class="tiny">Videos from Pexels. Animations from LottieFiles artists.</span></p>
     <div class="wk-go"><button class="btn big" id="wkStart">▶ Start Now</button></div>`, m => {
     m.classList.add('full', 'wk-page');
     $('#wkStart').onclick = () => { m.classList.remove('full', 'wk-page'); playWorkout(w); };
