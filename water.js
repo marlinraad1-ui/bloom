@@ -226,4 +226,88 @@ function applyNudges() {
   return changed;
 }
 if (applyNudges()) renderPlan();
+
+
+// ================= v3: the big cup changes to the drink you pick =================
+// Water: the big theme glass. Tea: a cute teacup with saucer and tea bag. Coffee: a latte mug with a heart.
+// Cola / 7Up / Fanta: a tall glass with ice, straw and fruit. Energy: a slim can with a see-through window.
+// The numbers switch to that drink, and the level animates from where it was.
+const lastLvl = {}; let lastSel = null;
+
+function bigCupHTML(k, ml, limit) {
+  const d = DRINK_TYPES[k], pct = Math.min(100, ml / limit * 100), from = lastLvl[k] ?? 0;
+  const liqX = extra => `<div class="bliq" data-h="${pct}" style="height:${from}%;--c1:${d.c1};--c2:${d.c2}"><div class="bwave" style="--c1:${k === 'coffee' ? '#f3e3c8' : d.c1}"></div>${extra || ''}${d.fizz ? '<i></i><i></i><i></i><i></i><i></i>' : ''}</div>`;
+  const liq = liqX('');
+  const steam = d.hot && ml ? '<div class="steam big"><i></i><i></i><i></i></div>' : '';
+  const shapes = {
+    tea: `<div class="bc bc-tea"><div class="bglass">${liq}<div class="bshine"></div></div><div class="handle"></div><div class="saucer"></div><div class="teabag"><span></span></div>${steam}<div class="cupdeco">🌸</div></div>`,
+    coffee: `<div class="bc bc-coffee"><div class="bglass">${liqX(ml ? '<div class="foam"><b>♥</b></div>' : '')}<div class="bshine"></div></div><div class="handle"></div>${steam}</div>`,
+    cola0: `<div class="bc bc-soda"><div class="bglass">${liqX(ml ? '<div class="ice"><b></b><b></b></div>' : '')}<div class="bshine"></div></div><div class="straw" style="--s:#e4002b"></div><div class="fruit">🍒</div></div>`,
+    up0: `<div class="bc bc-soda"><div class="bglass">${liqX(ml ? '<div class="ice"><b></b><b></b></div>' : '')}<div class="bshine"></div></div><div class="straw" style="--s:#1a9b47"></div><div class="fruit">🍋</div></div>`,
+    fanta0: `<div class="bc bc-soda"><div class="bglass">${liqX(ml ? '<div class="ice"><b></b><b></b></div>' : '')}<div class="bshine"></div></div><div class="straw" style="--s:#ff8a00"></div><div class="fruit">🍊</div></div>`,
+    energy0: `<div class="bc bc-can"><div class="canbody"><div class="bglass">${liq}</div><div class="bolt">⚡</div><div class="cantop"></div></div></div>`,
+    other: `<div class="bc bc-milk"><div class="bglass">${liq}<div class="bshine"></div></div></div>`,
+  };
+  return shapes[k] || '';
+}
+
+renderWater = function () {
+  const box = $('#waterCard'); if (!box) return;
+  if (!S.water?.goal) {
+    box.innerHTML = `<h3>💧 Water</h3><p>Set your daily water goal and Bloom reminds you step by step, gently 💕</p><button class="btn" id="wSet">Set my water goal</button>`;
+    $('#wSet').onclick = () => waterGoalModal(true); return;
+  }
+  if (applyNudges()) setTimeout(renderPlan);
+  const d = day(), all = d.drinks || [], waterOnly = all.filter(x => (x.kind || 'water') === 'water');
+  const g = S.water.goal, caf = caffeineToday();
+  const sel = PICKER.includes(S.lastDrink) ? S.lastDrink : 'water', sd = DRINK_TYPES[sel];
+  const isWater = sel === 'water', ml = isWater ? waterTotal() : drinkTotal(sel), lim = isWater ? g : DRINK_LIMIT[sel];
+  const next = (S.today?.items || []).filter(i => i.water && !i.done).sort((a, b) => minutes(a.time) - minutes(b.time))[0];
+  const swapped = lastSel !== null && lastSel !== sel; lastSel = sel;
+  const status = isWater
+    ? (ml >= g ? '🎉 Water goal reached! You glow 💖 More is a bonus, just stay under 4 L.' : next ? `Next sip: <b>${next.time}</b>, ${next.ml} ml 🫧` : `${g - ml} ml to go, you've got this 💕`)
+    : ml > lim ? `That's plenty of ${sd.name} for today 💕 Water from here on?` : ml ? `${lim - ml} ml left of your gentle daily max` : `None yet today`;
+  const myCaf = Math.round(ml * (CAFFEINE[sel] || 0));
+  box.innerHTML = `
+    <div class="row between"><h3>${sd.emoji} ${isWater ? 'Water' : esc(sd.name)}</h3><button class="linkbtn" id="wEdit">⚙️ ${g / 1000} L water goal</button></div>
+    <div class="water-row">
+      <div class="bigcup ${swapped ? 'swap' : ''}" style="--c1:${sd.c1};--c2:${sd.c2}">${isWater ? glassHTML(waterOnly, g) : bigCupHTML(sel, ml, lim)}${isWater ? '' : `<span class="vpct">${Math.round(ml / lim * 100)}%</span>`}</div>
+      <div style="min-width:0;flex:1" class="${swapped ? 'statswap' : ''}">
+        <div class="water-big" data-count="${ml}">${isWater ? (ml / 1000).toFixed(2) : ml} <small>${isWater ? `/ ${g / 1000} L water` : `/ ${lim} ml ${esc(sd.name)}`}</small></div>
+        <p class="small muted">${status}</p>
+        ${CAFFEINE[sel] ? `<p class="small" style="margin:2px 0">☕ ${myCaf} mg caffeine from ${esc(sd.name)}</p>` : ''}
+        <div class="caf ${caf > 400 ? 'over' : caf > 300 ? 'high' : ''}"><span>☕ All caffeine</span><div class="caf-bar"><i style="width:${Math.min(100, caf / 4)}%"></i></div><b>${caf} / 400 mg</b></div>
+      </div>
+    </div>
+    <div class="cups" id="wKind">${PICKER.map(k => { const m = k === 'water' ? waterTotal() : drinkTotal(k), L = k === 'water' ? g : DRINK_LIMIT[k]; return `<button type="button" class="cupbtn ${k === sel ? 'on' : ''} ${k !== 'water' && m > L ? 'over' : ''}" data-k="${k}">${miniCup(k, m / L * 100)}<span class="cn">${DRINK_TYPES[k].name}</span><span class="cm">${m ? `<b>${m}</b> ml` : '0 ml'}</span></button>`; }).join('')}</div>
+    <div class="addrow"><span class="addfor">${sd.emoji} ${esc(sd.name)}</span>${[150, 250, 330, 500].map(v => `<button class="btn ghost wadd ${v === sd.ml ? 'suggest' : ''}" data-ml="${v}">+${v}</button>`).join('')}<button class="btn ghost" id="wOther">+ other</button><button class="linkbtn" id="wUndo">↩ undo</button><button class="linkbtn" id="wReset" style="color:var(--danger)">🗑️ reset today</button></div>
+    <p class="muted tiny" style="margin:6px 0 0">${drinkTip(sel, caf)}</p>`;
+  $('#wEdit').onclick = () => waterGoalModal();
+  box.querySelectorAll('.cupbtn').forEach(b => b.onclick = () => { if (S.lastDrink === b.dataset.k) return; S.lastDrink = b.dataset.k; save(); renderWater(); });
+  box.querySelectorAll('.wadd').forEach(b => b.onclick = () => addDrink(+b.dataset.ml, sel));
+  $('#wOther').onclick = () => openModal(`<h2>Add ${esc(sd.name)}</h2><div class="field"><label>How much (ml)</label><input type="number" id="wMl" value="${sd.ml}" min="10" max="2000"></div><button class="btn big" id="wAddGo">Add</button>`, () => {
+    $('#wAddGo').onclick = () => { const v = Math.min(2000, +$('#wMl').value || 0); if (v > 0) { closeModal(); addDrink(v, sel); } };
+  });
+  $('#wUndo').onclick = undoDrink;
+  $('#wReset').onclick = resetDrinksToday;
+  // fill animation: from the old level to the new one
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    box.querySelectorAll('.bliq[data-h]').forEach(el => { el.style.height = el.dataset.h + '%'; });
+    if (!isWater) lastLvl[sel] = Math.min(100, ml / lim * 100);
+  }));
+  // count-up for the number when switching
+  if (swapped) { const el = box.querySelector('.water-big'); const n = el.firstChild; const target = isWater ? ml / 1000 : ml; let t0 = null;
+    const step = ts => { t0 = t0 || ts; const p = Math.min(1, (ts - t0) / 600); n.textContent = (isWater ? (target * p).toFixed(2) : Math.round(target * p)) + ' '; if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step); }
+};
+
+pourAnim = function (kind) {
+  const host = document.querySelector('#waterCard .bigcup'); if (!host) return;
+  const d = DRINK_TYPES[kind] || DRINK_TYPES.water;
+  const s = document.createElement('div'); s.className = 'pour'; s.style.setProperty('--c1', d.c1); s.style.setProperty('--c2', d.c2);
+  host.appendChild(s); setTimeout(() => s.remove(), 1100);
+  const sp = document.createElement('div'); sp.className = 'splash'; sp.style.setProperty('--c1', d.c1); host.appendChild(sp); setTimeout(() => sp.remove(), 1200);
+  host.classList.remove('wobble'); void host.offsetWidth; host.classList.add('wobble');
+  const c = document.querySelector(`#waterCard .cupbtn[data-k="${kind}"]`); if (c) { c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); }
+};
 renderWater();
