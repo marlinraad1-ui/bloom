@@ -1285,3 +1285,20 @@ img.ex-anim { width: 100%; height: 100%; object-fit: contain; background: #fff; 
 .player .move-emoji:has(.lot) { animation: none; width: 100%; max-width: 300px; height: 220px; margin: 6px auto; border-radius: 18px; overflow: hidden; background: #fff; }
 .wk-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
 .wk-thumb .lot { width: 100%; height: 100%; }
+
+/* ===== water: one clean drinking glass ===== */
+.v-glass .vglass { inset: 9px 7px 5px; border: 0; border-radius: 0 0 6px 6px; box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+  background: linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,.24) 45%, rgba(255,255,255,.06) 70%, rgba(255,255,255,.16)); }
+.v-glass .shine { top: 8%; left: 16%; width: 9%; height: 78%; transform: skewX(-6deg); background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.08)); }
+.v-glass .layer { background: linear-gradient(180deg, var(--c1), var(--c2)); }
+.v-glass .layer:first-child::after { content: ""; position: absolute; inset: auto 0 0; height: 18%; background: linear-gradient(0deg, rgba(0,0,0,.12), transparent); }
+.glass-line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 2;
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--accent) 30%, transparent)); }
+.glass-line .gl-body { fill: none; stroke: color-mix(in srgb, var(--accent) 55%, #fff); stroke-width: 2.6; stroke-linejoin: round; }
+.glass-line .gl-rim { fill: rgba(255,255,255,.18); stroke: color-mix(in srgb, var(--accent) 40%, #fff); stroke-width: 1.6; }
+.glass-line .gl-base { stroke: color-mix(in srgb, var(--accent) 45%, #fff); stroke-width: 5; stroke-linecap: round; opacity: .55; }
+.glass-line .gl-tick { stroke: color-mix(in srgb, var(--accent) 50%, #fff); stroke-width: 1.6; stroke-linecap: round; opacity: .75; }
+.v-glass::before, .v-glass::after { content: none !important; }
+.v-glass .vpct { bottom: 44%; font-size: 1.05rem; }
+.vbtn .glass-line { filter: none; }

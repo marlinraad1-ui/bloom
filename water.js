@@ -38,7 +38,7 @@ function drinkIcon(k) {
 // layered glass: each drink is its own colored layer, in the order you drank them
 function glassHTML(drinks, goal) {
   const total = drinks.reduce((a, x) => a + x.ml, 0), scale = Math.max(goal, total);
-  const shape = VESSEL[S.theme] || 'bottle';
+  const shape = 'glass'; // one clean drinking glass for every theme (rim color follows the theme)
   const layers = drinks.map((x, i) => {
     const d = DRINK_TYPES[x.kind] || DRINK_TYPES.water, h = x.ml / (total || 1) * 100;
     const fresh = i === drinks.length - 1 && Date.now() - (x.at || 0) < 2000;
@@ -48,6 +48,7 @@ function glassHTML(drinks, goal) {
   return `<div class="vessel v-${shape}" style="--top1:${top.c1};--top2:${top.c2}">
     <div class="vglass"><div class="layers" style="height:${Math.min(100, total / scale * 100)}%">${layers}<div class="wave"></div></div>
       ${top.hot && drinks.length ? '<div class="steam"><i></i><i></i><i></i></div>' : ''}<div class="shine"></div></div>
+    <svg class="glass-line" viewBox="0 0 92 140" aria-hidden="true"><path class="gl-body" d="M7 9 H85 L76 130 Q75.5 135 70 135 H22 Q16.5 135 16 130 Z"/><path class="gl-base" d="M18 127 H74"/><ellipse class="gl-rim" cx="46" cy="9" rx="39" ry="3.2"/><path class="gl-tick" d="M72 40 h6 M73 64 h5 M74 88 h4 M75 110 h3"/></svg>
     <span class="vpct">${Math.round(total / goal * 100)}%</span></div>`;
 }
 
