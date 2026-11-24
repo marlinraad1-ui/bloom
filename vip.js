@@ -82,7 +82,7 @@ async function vipManage() {
 // refresh VIP status from the server (only if this phone already has a login)
 async function refreshVip(force) {
   try {
-    if (!navigator.onLine || !window.SUPA_URL) return;
+    if (!navigator.onLine || typeof SUPA_URL === 'undefined' || !SUPA_URL) return;
     if (!Object.keys(localStorage).some(k => /^sb-.*-auth-token$/.test(k))) return;
     if (!(await commInit())) return;
     const u = (await sb.auth.getUser()).data.user;

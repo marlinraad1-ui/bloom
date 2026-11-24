@@ -29,7 +29,7 @@ function myWeek() {
 let lastLiveSig = null, lastWeekSync = 0;
 async function syncTogether(force) {
   try {
-    if (!navigator.onLine || !window.SUPA_URL) return;
+    if (!navigator.onLine || typeof SUPA_URL === 'undefined' || !SUPA_URL) return;
     if (!Object.keys(localStorage).some(k => /^sb-.*-auth-token$/.test(k))) return;
     if (!(await commInit()) || !comm().name) return;
     const u = (await sb.auth.getUser()).data.user; if (!isRealUser(u)) return;
@@ -49,7 +49,7 @@ setInterval(() => syncTogether(false), 30e3);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) syncTogether(false); });
 setTimeout(() => syncTogether(true), 4000);
 
-const untilText = (start, goal) => { const end = new Date(start + goal * 3600e3); return end.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }); };
+const untilText = (start, goal) => { const end = new Date(start + goal * 3600e3); return end.toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
 const personRow = (p, right, sub, me_) => `<div class="tg-row ${me_ ? 'me' : ''}" data-uid="${esc(p.id || '')}">${avatarHTML(p, 'sm')}<div class="tg-who"><b>${nameHTML(p)}</b>${sub ? `<span>${sub}</span>` : ''}</div>${right}</div>`;
 
 async function renderTogether() {
@@ -122,7 +122,7 @@ async function renderGroups() {
   body.innerHTML = `<button class="btn big" id="tgNew">＋ Start a group fast</button>
     ${groups.map(g => {
       const st = new Date(g.starts_at).getTime(), n = g.fast_group_members.length, joined = g.fast_group_members.some(m => m.user_id === me);
-      const state = now < st ? `starts ${new Date(st).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}` : now < st + g.goal_hours * 3600e3 ? `live · ends ${untilText(st, g.goal_hours)}` : 'finished';
+      const state = now < st ? `starts ${new Date(st).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : now < st + g.goal_hours * 3600e3 ? `live · ends ${untilText(st, g.goal_hours)}` : 'finished';
       return `<div class="tg-group ${joined ? 'joined' : ''}" data-g="${g.id}"><span class="tg-gemo">${esc(g.emoji)}</span><div class="tg-who"><b>${esc(g.name)}</b><span>${g.goal_hours} h · ${state} · ${n} ${n === 1 ? 'member' : 'members'}</span></div><span class="chip">${joined ? '✓ joined' : 'Join'}</span></div>`;
     }).join('') || '<p class="muted small" style="margin-top:10px">No group fasts yet. Start one and invite everyone 💪</p>'}`;
   $('#tgNew').onclick = newGroupModal;
