@@ -1,6 +1,6 @@
 // Service worker: offline cache + notification clicks
-const CACHE = 'bloom-v33';
-const FILES = ['./', './index.html', './styles.css', './data.js', './chat.js', './app.js', './program.js', './vision.js', './config.js', './community.js', './friends.js', './auth.js', './vip.js', './food.js', './exercises.js', './videos.js', './gear.js', './intervals.js', './water.js', './undo.js', './safety.js', './native.js', './icons.js', './manifest.json', './icon.svg'];
+const CACHE = 'bloom-v34';
+const FILES = ['./', './index.html', './styles.css', './data.js', './chat.js', './app.js', './program.js', './vision.js', './config.js', './community.js', './friends.js', './auth.js', './vip.js', './food.js', './exercises.js', './videos.js', './gear.js', './intervals.js', './water.js', './undo.js', './together.js', './safety.js', './native.js', './icons.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))));

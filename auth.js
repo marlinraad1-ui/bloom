@@ -15,6 +15,7 @@ function showAuthPanel(show) {
   $('#peopleSeg').hidden = show;
   $('#feedPanel').hidden = show || S.peopleTab === 'friends';
   $('#friendsPanel').hidden = show || S.peopleTab !== 'friends';
+  if ($('#togetherPanel')) $('#togetherPanel').hidden = show || S.peopleTab !== 'together';
 }
 
 function renderAuth(mode = 'signup', note = '') {
