@@ -144,6 +144,7 @@
 
     <!-- MOVE -->
     <section class="view" id="view-move">
+      <div class="card coach" id="coachCard"></div>
       <div class="card program" id="programCard"></div>
       <div class="card">
         <h3>Steps</h3>
@@ -158,12 +159,12 @@
         </div>
         <p class="muted small">Type steps from your phone or watch. <b>＋ Add</b> adds to today, <b>= Set total</b> replaces today's number. Calories update right away.</p>
       </div>
-      <div class="card">
-        <h3>Workouts</h3>
+      <details class="card classic-wk">
+        <summary><h3>📚 All workouts (K-pop, gym, cardio)</h3></summary>
         <div id="workoutFilters"></div>
         <p class="muted small" id="workoutHint"></p>
         <div id="workoutList"></div>
-      </div>
+      </details>
       <div class="card">
         <h3>Done today</h3>
         <ul class="list" id="workoutLog"></ul>
@@ -248,6 +249,7 @@
 <script src="videos.js"></script>
 <script src="gear.js"></script>
 <script src="intervals.js"></script>
+<script src="coach.js"></script>
 <script src="water.js"></script>
 <script src="undo.js"></script>
 <script src="together.js"></script>

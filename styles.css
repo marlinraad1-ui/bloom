@@ -1246,3 +1246,42 @@ img.ex-anim { width: 100%; height: 100%; object-fit: contain; background: #fff; 
 .tg-gemo { font-size: 1.8rem; } .tg-gemo.big { font-size: 3rem; display: block; text-align: center; }
 .tg-ghead { text-align: center; margin-bottom: 12px; } .tg-ghead h2 { margin: 4px 0; }
 .tg-vis { margin-top: 14px; justify-content: center; }
+
+/* ===================== COACH (personal workouts) ===================== */
+.card.coach { padding: 0; overflow: hidden; background: transparent; border: 0; box-shadow: none; }
+.coach-hero { position: relative; padding: 16px; border-radius: var(--radius); color: #fff; overflow: hidden;
+  background: radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--accent2) 80%, transparent), transparent 55%), linear-gradient(150deg, #1c1430, #3a1d4a 55%, color-mix(in srgb, var(--accent) 70%, #3a1d4a)); box-shadow: 0 12px 30px rgba(40,10,60,.35); }
+.coach-hero.empty { text-align: center; } .coach-hero.empty p { color: rgba(255,255,255,.85); }
+.ch-emoji { font-size: 3rem; animation: bob 2.4s ease-in-out infinite; }
+.ch-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ch-tag { font-size: .75rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; background: rgba(255,255,255,.16); padding: 4px 10px; border-radius: 99px; }
+.ch-streak { font-size: .8rem; font-weight: 800; background: #ff7a00; padding: 4px 10px; border-radius: 99px; }
+.ch-vis { height: 170px; margin: 12px -16px 0; overflow: hidden; position: relative; background: #000; }
+.ch-vis .vid, .ch-vis .lot { width: 100%; height: 100%; object-fit: cover; }
+.ch-vis::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, #2a1838); }
+.ch-title { color: #fff; font-size: 1.6rem; margin: -26px 0 6px; position: relative; z-index: 1; }
+.ch-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: rgba(255,255,255,.85); } .ch-stats b { color: #fff; font-size: 1.05rem; }
+.ch-moves { display: flex; gap: 8px; overflow-x: auto; margin: 12px -4px; padding: 0 4px 4px; scrollbar-width: none; }
+.ch-move { flex: 0 0 84px; display: grid; gap: 4px; background: rgba(255,255,255,.1); border: 0; border-radius: 14px; padding: 6px; color: #fff; font: 700 .68rem var(--font); text-align: center; }
+.ch-move img, .ch-move .lot { width: 100%; height: 60px; object-fit: cover; border-radius: 10px; background: #fff; }
+.coach-hero .btn.big { width: 100%; margin-top: 6px; }
+.coach-hero .btn.big:not(.vip-btn) { background: #fff; color: #2a1838; }
+.ch-links { display: flex; justify-content: space-between; margin-top: 8px; } .ch-links .linkbtn { color: rgba(255,255,255,.85); }
+.ch-h { margin: 16px 2px 8px; }
+.ch-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ch-q { display: grid; gap: 4px; text-align: left; padding: 8px; border-radius: 18px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: var(--font); box-shadow: var(--shadow); }
+.cq-vis img, .cq-vis .lot { width: 100%; height: 90px; object-fit: cover; border-radius: 12px; display: block; background: #fff; }
+.ch-q b { font-size: .88rem; }
+.classic-wk summary { cursor: pointer; list-style: none; } .classic-wk summary h3 { display: inline; } .classic-wk summary::-webkit-details-marker { display: none; }
+.classic-wk[open] summary { margin-bottom: 10px; }
+.qz-q { margin: 14px 0 6px; font-family: var(--head); }
+.qz-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; }
+.qz-o { display: grid; gap: 2px; padding: 10px 8px; border-radius: 14px; border: 2px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); text-align: center; }
+.qz-o span { font-size: .7rem; color: var(--muted); } .qz-o.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
+.ex-tips { padding-left: 18px; line-height: 1.6; }
+.p-tips { list-style: none; padding: 0; margin: 4px 0 0; font-size: .82rem; color: var(--muted); text-align: center; } .p-tips li::before { content: '✓ '; color: var(--good); }
+.done-sheet { text-align: center; } .done-sheet .btn { padding: 8px 10px; font-size: .85rem; }
+.noviz { font-size: 3rem; display: grid; place-items: center; height: 100%; }
+.player .move-emoji:has(.lot) { animation: none; width: 100%; max-width: 300px; height: 220px; margin: 6px auto; border-radius: 18px; overflow: hidden; background: #fff; }
+.wk-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
+.wk-thumb .lot { width: 100%; height: 100%; }
