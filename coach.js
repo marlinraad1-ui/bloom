@@ -13,8 +13,11 @@ const PX_V = id => ({
   8836970: '8836970/8836970-sd_960_506_25fps.mp4', 6286173: '6286173/6286173-sd_640_360_30fps.mp4', 4159114: '4159114/4159114-sd_360_640_24fps.mp4',
   6389045: '6389045/6389045-sd_640_360_25fps.mp4', 8402077: '8402077/8402077-sd_360_640_30fps.mp4', 6077273: '6077273/6077273-sd_960_506_25fps.mp4',
   6707719: '6707719/6707719-sd_640_360_25fps.mp4', 6525490: '6525490/6525490-sd_640_360_25fps.mp4',
+  7187405: '7187405/7187405-sd_640_360_24fps.mp4', 4159115: '4159115/4159115-sd_360_640_24fps.mp4', 8401254: '8401254/8401254-sd_640_360_30fps.mp4',
+  8233228: '8233228/8233228-sd_960_506_25fps.mp4', 4488002: '4488002/4488002-sd_640_360_25fps.mp4', 4258997: '4258997/4258997-sd_640_360_25fps.mp4',
+  4159116: '4159116/4159116-sd_360_640_24fps.mp4', 9001922: '9001922/9001922-sd_640_360_25fps.mp4',
 })[id];
-const TALL = new Set([8233047, 4159114, 8402077]);
+const TALL = new Set([8233047, 4159114, 8402077, 4159115, 4159116]);
 
 // zone: cardio / legs / glutes / abs / arms / full. jump: high impact. eq: what you need. lvl: 1 easy to 3 hard
 const EX = {
@@ -24,9 +27,9 @@ const EX = {
   burpee:   { n: 'Burpees', anim: 'burpee', zone: 'full', jump: 1, met: 10, lvl: 3, tip: ['Squat, hands down, jump back to plank', 'Jump up with arms high', 'Easier: step back instead of jumping'] },
   jsquat:   { n: 'Jump squats', anim: 'jumpsquat', zone: 'legs', jump: 1, met: 9, lvl: 3, tip: ['Sit back into a squat', 'Explode up, land soft', 'Easier: regular squats'] },
   splitj:   { n: 'Split jumps', anim: 'splitjump', zone: 'legs', jump: 1, met: 9, lvl: 3, tip: ['Lunge, then jump and switch legs', 'Land softly in a lunge', 'Easier: alternating lunges'] },
-  boxing:   { n: 'Shadow boxing', v: 8478087, zone: 'cardio', met: 7.5, lvl: 1, tip: ['Fast jabs and crosses', 'Stay light on your feet', 'Breathe out on every punch'] },
-  rope:     { n: 'Jump rope', v: 6286170, zone: 'cardio', jump: 1, eq: 'rope', met: 11, lvl: 2, tip: ['Small jumps, wrists turn the rope', 'Stay on the balls of your feet'] },
-  stepup:   { n: 'Step ups', v: 6286165, zone: 'legs', eq: 'stairs', met: 7, lvl: 1, tip: ['Use a sturdy step or stair', 'Push through the heel', 'Switch legs each rep'] },
+  boxing:   { n: 'Shadow boxing', v: 7187405, zone: 'cardio', met: 7.5, lvl: 1, tip: ['Fast jabs and crosses', 'Stay light on your feet', 'Breathe out on every punch'] },
+  rope:     { n: 'Jump rope', v: 4159115, zone: 'cardio', jump: 1, eq: 'rope', met: 11, lvl: 2, tip: ['Small jumps, wrists turn the rope', 'Stay on the balls of your feet'] },
+  stepup:   { n: 'Step ups', v: 8401254, zone: 'legs', eq: 'stairs', met: 7, lvl: 1, tip: ['Use a sturdy step or stair', 'Push through the heel', 'Switch legs each rep'] },
   squat:    { n: 'Squats', v: 8837118, zone: 'legs', met: 5.5, lvl: 1, tip: ['Feet shoulder width', 'Hips back like sitting on a chair', 'Chest up, knees over toes'] },
   sumo:     { n: 'Sumo squats', v: 6525475, zone: 'glutes', met: 5.5, lvl: 1, tip: ['Wide stance, toes out', 'Sink straight down', 'Squeeze your glutes up'] },
   lunge:    { n: 'Lunges', v: 8233047, zone: 'legs', met: 6, lvl: 1, tip: ['Big step, both knees 90°', 'Front knee over ankle', 'Alternate legs'] },
@@ -35,23 +38,22 @@ const EX = {
   bridge:   { n: 'Glute bridges', v: 6525487, zone: 'glutes', met: 4, lvl: 1, tip: ['Feet flat, close to your hips', 'Lift hips, squeeze at the top', 'Lower slowly'] },
   donkey:   { n: 'Donkey kicks', v: 6525495, zone: 'glutes', met: 4.5, lvl: 1, tip: ['On all fours, knee bent', 'Kick the heel up to the ceiling', 'Don\'t arch your lower back'] },
   kick:     { n: 'Squat + kick', anim: 'kick', zone: 'full', met: 7, lvl: 2, tip: ['Squat down', 'Stand up and kick forward', 'Switch legs'] },
-  crunch:   { n: 'Crunches', v: 8472284, zone: 'abs', met: 4, lvl: 1, tip: ['Lower back stays on the floor', 'Lift shoulders, not your neck', 'Breathe out going up'] },
+  crunch:   { n: 'Crunches', v: 8233228, zone: 'abs', met: 4, lvl: 1, tip: ['Lower back stays on the floor', 'Lift shoulders, not your neck', 'Breathe out going up'] },
   bicycle:  { n: 'Bicycle crunches', v: 5025822, zone: 'abs', met: 5, lvl: 2, tip: ['Elbow to opposite knee', 'Slow and controlled', 'Other leg straight'] },
-  legraise: { n: 'Leg raises', v: 6286154, zone: 'abs', met: 4.5, lvl: 2, tip: ['Hands under your hips', 'Legs straight up and slowly down', 'Easier: bend your knees'] },
+  legraise: { n: 'Leg raises', v: 6525490, zone: 'abs', met: 4.5, lvl: 2, tip: ['Hands under your hips', 'Legs straight up and slowly down', 'Easier: bend your knees'] },
   revcr:    { n: 'Reverse crunches', anim: 'crunch', zone: 'abs', met: 4.5, lvl: 1, tip: ['Knees to chest', 'Lift hips a little off the floor', 'Lower slowly'] },
-  situp:    { n: 'Sit ups', v: 6286161, zone: 'abs', met: 5, lvl: 2, tip: ['Feet on the floor', 'Roll up to sitting', 'Easier: crunches'] },
-  toetouch: { n: 'Toe touches', v: 6286160, zone: 'abs', met: 4.5, lvl: 1, tip: ['Legs up, reach for your toes', 'Shoulders lift off the floor'] },
+  situp:    { n: 'Sit ups', v: 4488002, zone: 'abs', met: 5, lvl: 2, tip: ['Feet on the floor', 'Roll up to sitting', 'Easier: crunches'] },
   abcircle: { n: 'Seated ab circles', anim: 'abcircle', zone: 'abs', met: 4, lvl: 2, tip: ['Lean back, legs up', 'Draw circles with your knees'] },
   frog:     { n: 'Frog press', anim: 'frogpress', zone: 'abs', met: 4.5, lvl: 2, tip: ['Lie back, knees bent wide', 'Press legs out and pull back in'] },
   plank:    { n: 'Plank', v: 8836970, zone: 'abs', met: 4, lvl: 1, tip: ['Straight line head to heels', 'Squeeze belly and glutes', 'Easier: on your knees'] },
   tplank:   { n: 'T plank', anim: 'plank', zone: 'abs', met: 5, lvl: 3, tip: ['From plank, rotate and reach up', 'Switch sides'] },
-  pushup:   { n: 'Push ups', v: 6286173, zone: 'arms', met: 6, lvl: 2, tip: ['Hands a bit wider than shoulders', 'Chest to the floor', 'Easier: on your knees'] },
+  pushup:   { n: 'Push ups', v: 4258997, zone: 'arms', met: 6, lvl: 2, tip: ['Hands a bit wider than shoulders', 'Chest to the floor', 'Easier: on your knees'] },
   dips:     { n: 'Tricep dips', v: 4159114, zone: 'arms', eq: 'chair', met: 5, lvl: 2, tip: ['Hands on a chair behind you', 'Bend elbows straight back', 'Legs bent = easier'] },
-  curls:    { n: 'Bicep curls', v: 6389045, zone: 'arms', eq: 'dumbbells', met: 4, lvl: 1, tip: ['Elbows stay at your sides', 'Curl up, lower slowly'] },
+  curls:    { n: 'Bicep curls', v: 4159116, zone: 'arms', eq: 'dumbbells', met: 4, lvl: 1, tip: ['Elbows stay at your sides', 'Curl up, lower slowly'] },
   inchworm: { n: 'Inchworms', anim: 'inchworm', zone: 'full', met: 5, lvl: 2, tip: ['Fold forward, walk hands out to plank', 'Walk hands back and stand'] },
 };
 const WARM = { n: 'Warm up: arm swings + march', v: 8402077, met: 3.5, tip: ['Loosen up, get warm', 'Breathe deep'] };
-const COOL = { n: 'Cool down stretch', v: 6077273, met: 2.5, tip: ['Slow deep breaths', 'Hold each stretch'] };
+const COOL = { n: 'Cool down stretch', v: 9001922, met: 2.5, tip: ['Slow deep breaths', 'Hold each stretch'] };
 
 const FOCUS_NAMES = { full: 'Full body burn', abs: 'Belly burn', legs: 'Legs & thighs', glutes: 'Booty builder', arms: 'Arms & upper body', cardio: 'Fat blast cardio' };
 const FOCUS_EMOJI = { full: '🔥', abs: '💎', legs: '🦵', glutes: '🍑', arms: '💪', cardio: '⚡' };
@@ -137,7 +139,7 @@ function coachQuiz() {
 const exVisual = (e, cls = '') => e.v && navigator.onLine
   ? `<video class="vid ${TALL.has(e.v) ? 'tall' : ''} ${cls}" src="https://videos.pexels.com/video-files/${PX_V(e.v)}" muted autoplay loop playsinline preload="metadata"></video>`
   : e.anim ? `<div class="lot ${cls}" data-a="${e.anim}"></div>` : `<span class="noviz">${FOCUS_EMOJI.full}</span>`;
-const THUMB_NAME = { 6525469: 'exercises-girl-sport-sporty-6525469', 6525491: 'exercises-girl-sport-sporty-6525491', 6525502: 'exercises-girl-sport-sporty-6525502', 6525475: 'exercises-girl-sport-sporty-6525475', 6525487: 'exercises-girl-sport-sporty-6525487', 6525495: 'exercises-girl-sport-sporty-6525495', 6525490: 'exercises-girl-sport-sporty-6525490', 8478087: 'boxer-coach-gloves-master-of-sports-8478087', 8472284: 'boxer-coach-gloves-master-of-sports-8472284', 6077273: 'ball-balls-basketball-basketball-basket-6077273', 8402077: 'adult-athlete-ball-beautiful-8402077', 6707719: 'adult-balance-body-care-6707719' };
+const THUMB_NAME = { 4258997: 'covid-19-exercise-interracial-couple-isolation-period-4258997', 4488002: 'crossfit-fit-fitness-girl-4488002', 7187405: 'active-activity-art-athlete-7187405', 9001922: 'beautiful-body-brunette-comfort-9001922', 6525469: 'exercises-girl-sport-sporty-6525469', 6525491: 'exercises-girl-sport-sporty-6525491', 6525502: 'exercises-girl-sport-sporty-6525502', 6525475: 'exercises-girl-sport-sporty-6525475', 6525487: 'exercises-girl-sport-sporty-6525487', 6525495: 'exercises-girl-sport-sporty-6525495', 6525490: 'exercises-girl-sport-sporty-6525490', 8478087: 'boxer-coach-gloves-master-of-sports-8478087', 8472284: 'boxer-coach-gloves-master-of-sports-8472284', 6077273: 'ball-balls-basketball-basketball-basket-6077273', 8402077: 'adult-athlete-ball-beautiful-8402077', 6707719: 'adult-balance-body-care-6707719' };
 const exThumb = e => e.v ? `<img src="https://images.pexels.com/videos/${e.v}/${THUMB_NAME[e.v] || 'pexels-photo-' + e.v}.jpeg?auto=compress&cs=tinysrgb&w=200" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🔥'}))">` : `<div class="lot" data-a="${e.anim}"></div>`;
 
 const QUICK = [
@@ -147,6 +149,10 @@ const QUICK = [
   { id: 'q-full', title: '15-min Full Body', emoji: '🔥', focus: 'full', min: 15 },
   { id: 'q-arms', title: '8-min Toned Arms', emoji: '💪', focus: 'arms', min: 8 },
   { id: 'q-legs', title: '10-min Lean Legs', emoji: '🦵', focus: 'legs', min: 10 },
+  { id: 'q-wake', title: '5-min Morning Wake-up', emoji: '☀️', focus: 'full', min: 5 },
+  { id: 'q-flatbelly', title: '12-min Flat Belly', emoji: '🎀', focus: 'abs', min: 12 },
+  { id: 'q-sweatparty', title: '20-min Sweat Party', emoji: '💦', focus: 'cardio', min: 20 },
+  { id: 'q-total', title: '25-min Total Burn', emoji: '👑', focus: 'full', min: 25 },
 ];
 
 function renderCoach() {

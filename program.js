@@ -3,10 +3,10 @@
 // and asks if you're serious. Long fasts automatically switch to gentle workouts.
 
 const W_TYPE = {
-  cardio: ['walk', 'lowcardio', 'cycle', 'run', 'rope', 'hiit', 'm-walkfast', 'm-box', 'm-burpee', 'w-hiit'],
+  cardio: ['walk', 'lowcardio', 'walk-home', 'rope', 'hiit', 'tabata', 'silent-hiit', 'stairs', 'm-walkfast', 'm-box', 'm-burpee', 'w-hiit'],
   dance: ['dance', 'kp-bp', 'kp-bts', 'kp-twice', 'kp-skz', 'kp-aespa'],
-  strength: ['w-tone', 'w-glute', 'w-strong', 'm-body', 'm-cali', 'm-dumb', 'w-booty', 'kp-idol'],
-  recovery: ['powyoga', 'w-pilates', 'walk']
+  strength: ['w-tone', 'w-glute', 'w-strong', 'm-body', 'w-booty', 'kp-idol', 'pil-booty', 'arm-sculpt', 'stand-abs', 'mat-abs'],
+  recovery: ['powyoga', 'w-pilates', 'walk', 'walk-home', 'pil-booty']
 };
 // what each day of the week looks like (morning, evening)
 const WEEK = [['cardio', 'strength'], ['dance', 'strength'], ['cardio', 'recovery'], ['dance', 'strength'], ['cardio', 'strength'], ['dance', 'recovery'], ['cardio', 'dance']];

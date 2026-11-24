@@ -42,22 +42,29 @@ const VIDEOS = {
   4267356: ['4267356/4267356-sd_640_360_30fps.mp4', '4267356/pexels-photo-4267356.jpeg'],
   6525499: ['6525499/6525499-sd_640_360_25fps.mp4', '6525499/exercises-girl-sport-sporty-6525499.jpeg'],
   6525463: ['6525463/6525463-sd_640_360_25fps.mp4', '6525463/exercises-girl-sport-sporty-6525463.jpeg'],
+  7187405: ['7187405/7187405-sd_640_360_24fps.mp4', '7187405/active-activity-art-athlete-7187405.jpeg'],
+  4159115: ['4159115/4159115-sd_360_640_24fps.mp4', '4159115/pexels-photo-4159115.jpeg', 1],
+  4159116: ['4159116/4159116-sd_360_640_24fps.mp4', '4159116/pexels-photo-4159116.jpeg', 1],
+  8401254: ['8401254/8401254-sd_640_360_30fps.mp4', '8401254/pexels-photo-8401254.jpeg'],
+  4488002: ['4488002/4488002-sd_640_360_25fps.mp4', '4488002/crossfit-fit-fitness-girl-4488002.jpeg'],
+  4258997: ['4258997/4258997-sd_640_360_25fps.mp4', '4258997/covid-19-exercise-interracial-couple-isolation-period-4258997.jpeg'],
+  4159114: ['4159114/4159114-sd_360_640_24fps.mp4', '4159114/pexels-photo-4159114.jpeg', 1],
 };
 const VID_RULES = [
   [/rest|recover|walk down|cool down$/i, 6707719],
-  [/jab|hook|uppercut|slip and duck|stance|^combos$/i, 8478087],
-  [/combo|groove|freestyle/i, 6980766],
-  [/pull-up/i, 6286172],
+  [/jab|hook|uppercut|slip and duck|stance|^combos$/i, 7187405],
+  [/combo|groove|freestyle/i, null],
+  [/pull-up/i, null],
   [/hanging/i, null],
-  [/curl/i, 6286162],
-  [/row|press|swing|thruster|dumbbell|deadlift|goblet/i, 6286152],
-  [/stair|two steps|steep hill|step up/i, 6286165],
-  [/incline|treadmill/i, 6286155],
-  [/\b(sprint|run|jog)/i, 6286151],
+  [/curl/i, 4159116],
+  [/row|press|swing|thruster|dumbbell|deadlift|goblet/i, null],
+  [/stair|two steps|steep hill|step up/i, 8401254],
+  [/incline|treadmill/i, 8401254],
+  [/\b(sprint|run|jog)/i, null],
   [/warm up/i, 6525468],
-  [/walk|march|side step/i, 6286153],
-  [/spin|moderate pace|^hill$|^climb$/i, 4861146],
-  [/rope|basic bounce|alternate feet|double speed/i, 6286170],
+  [/walk|march|side step/i, null],
+  [/spin|moderate pace|^hill$|^climb$/i, null],
+  [/rope|basic bounce|alternate feet|double speed/i, 4159115],
   [/plank jack|mountain|shoulder tap|renegade/i, 6525469],
   [/jack/i, 4764124],
   [/jump squat|squat jump|box jump/i, 6525498],
@@ -68,14 +75,15 @@ const VID_RULES = [
   [/high knees|knee lift|knee drive|butt kick|squat kick/i, 5025964],
   [/standing (cross )?crunch/i, 6525481],
   [/bicycle/i, 5025822],
-  [/twist|boat/i, 6455345],
-  [/toe touch/i, 6286160],
+  [/twist|boat/i, null],
+  [/toe touch/i, null],
   [/flutter|dead bug|hundred|roll up|leg circles|side kicks|abs circle/i, 6525485],
   [/leg raise|knee raise|leg lift/i, 6525490],
-  [/sit-up/i, 6286161],
+  [/sit-up/i, 4488002],
   [/crunch/i, 6525494],
   [/swan|cobra/i, 6437925],
-  [/push-up|dip/i, 6286173],
+  [/push-up/i, 4258997],
+  [/dip/i, 4159114],
   [/plank|bird dog/i, 6525496],
   [/bulgarian|split squat|lunge|warrior/i, 6525491],
   [/sumo/i, 6525475],
@@ -86,10 +94,8 @@ const VID_RULES = [
 // which real video fits this move (bike and treadmill workouts keep showing the machine)
 function vidFor(m, w) {
   if (w && !/rest|recover|cool down$/i.test(m)) {
-    if (w.id === 'cycle' || (w.needs || []).includes('bike')) return 4861146;
-    if ((w.needs || []).includes('treadmill')) return /sprint|jog|run/i.test(m) ? 6286151 : 6286155;
   }
-  const r = VID_RULES.find(([re]) => re.test(m)); return r ? r[1] : null;
+  const r = VID_RULES.find(([re]) => re.test(m)); return r && VIDEOS[r[1]] ? r[1] : null;
 }
 const vidThumb = id => `${PXI}${VIDEOS[id][1]}?auto=compress&cs=tinysrgb&w=320`;
 const vidSrc = id => PX + VIDEOS[id][0];

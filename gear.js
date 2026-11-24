@@ -3,24 +3,12 @@
 // VIP: "Best for you" pick and a full workout page with every exercise.
 
 const GEAR = [
-  ['none', '🙌', 'No equipment'], ['mat', '🧘', 'Yoga mat'], ['treadmill', '🏃', 'Treadmill'], ['bike', '🚴', 'Exercise bike'],
-  ['dumbbells', '🏋️', 'Dumbbells'], ['rope', '🪢', 'Jump rope'], ['band', '🎗️', 'Resistance band'], ['stairs', '🪜', 'Stairs or a step'], ['bar', '🤸', 'Pull-up bar'],
+  ['none', '🙌', 'No equipment'], ['mat', '🧘', 'Yoga mat'],
+  ['dumbbells', '🏋️', 'Dumbbells'], ['rope', '🪢', 'Jump rope'], ['band', '🎗️', 'Resistance band'], ['stairs', '🪜', 'Stairs or a step'], ['chair', '🪑', 'Chair'],
 ];
 
 // more workouts that use home equipment (all burn a lot)
 WORKOUTS.push(
-  { id: 'tm-incline', name: 'Treadmill incline walk', emoji: '⛰️', met: 7.0, min: 30, level: 'medium', who: 'all', goal: 'loss', needs: ['treadmill'],
-    help: 'Steep incline, steady walk. Burns like a jog with zero jumping. A favourite for melting belly fat.',
-    moves: ['Warm up flat walk', 'Incline 8%', 'Incline 10%', 'Incline 12%', 'Incline 12% fast', 'Incline 10%', 'Cool down flat walk'],
-    video: 'treadmill incline walk workout 30 minutes' },
-  { id: 'tm-sprint', name: 'Treadmill sprint intervals', emoji: '🏃', met: 10.0, min: 25, level: 'max', who: 'all', goal: 'loss', needs: ['treadmill'], jump: true,
-    help: 'Short sprints and walking breaks. One of the biggest burns you can get in 25 minutes.',
-    moves: ['Warm up walk', 'Jog', 'Sprint 30s', 'Walk', 'Sprint 30s', 'Walk', 'Sprint 30s', 'Walk', 'Jog', 'Cool down walk'],
-    video: 'treadmill sprint interval workout 25 minutes' },
-  { id: 'bike-hiit', name: 'Bike HIIT', emoji: '🚴', met: 8.5, min: 30, level: 'max', who: 'all', goal: 'loss', needs: ['bike'],
-    help: 'Hard pedalling bursts, kind to your knees, totally silent.',
-    moves: ['Easy spin', 'Climb', 'Sprint 30s', 'Recover', 'Sprint 30s', 'Recover', 'Climb', 'Sprint 30s', 'Easy spin'],
-    video: 'stationary bike HIIT workout 30 minutes' },
   { id: 'db-burn', name: 'Dumbbell fat burn circuit', emoji: '🏋️', met: 6.5, min: 30, level: 'medium', who: 'all', goal: 'loss', needs: ['dumbbells'],
     help: 'Weights plus cardio pace. Burns now and keeps burning after.',
     moves: ['Goblet squats', 'Dumbbell swings', 'Renegade rows', 'Thrusters', 'Reverse lunges', 'Russian twists', 'Stretch'],
@@ -41,13 +29,33 @@ WORKOUTS.push(
     help: 'All the sweat of HIIT, zero jumping. Perfect for apartments and sore knees.',
     moves: ['March warm up', 'Squat to reach', 'Slow mountain climbers', 'Reverse lunge knee drive', 'Plank shoulder taps', 'Skater steps', 'Standing cross crunch', 'Cool down'],
     video: 'silent no jumping HIIT workout 30 minutes apartment friendly' },
+  { id: 'stand-abs', name: 'Standing abs burn', emoji: '🎀', met: 5.5, min: 20, level: 'medium', who: 'all', goal: 'loss',
+    help: 'Abs without lying on the floor. Fast and sweaty, great in a small room.',
+    moves: ['March warm up', 'Standing cross crunch', 'Knee drive', 'Side bends', 'Standing cross crunch', 'Skater steps', 'Stretch'],
+    video: 'standing abs workout 20 minutes no jumping' },
+  { id: 'pil-booty', name: 'Pilates booty sculpt', emoji: '🩰', met: 4.2, min: 30, level: 'simple', who: 'women', goal: 'both',
+    help: 'Slow pilates moves that really burn. Lifts and rounds your booty, no jumping.',
+    moves: ['Glute bridges', 'Donkey kicks', 'Fire hydrants', 'Side kicks', 'Frog pumps', 'Bridge pulses', 'Stretch'],
+    video: 'pilates booty workout 30 minutes' },
+  { id: 'tabata', name: 'Tabata at home', emoji: '⏱️', met: 8.5, min: 20, level: 'max', who: 'all', goal: 'loss', jump: true,
+    help: '20 seconds all out, 10 seconds rest. Short, brutal, burns for hours after.',
+    moves: ['Warm up', 'Squat jumps', 'Rest', 'Mountain climbers', 'Rest', 'High knees', 'Rest', 'Plank jacks', 'Rest', 'Burpees', 'Cool down'],
+    video: 'tabata workout at home 20 minutes' },
+  { id: 'arm-sculpt', name: 'Toned arms, no weights', emoji: '💪', met: 4.5, min: 20, level: 'simple', who: 'all', goal: 'both', needs: ['chair'],
+    help: 'Arms and shoulders with just your body and a chair. Bye arm jiggle.',
+    moves: ['Arm circles', 'Knee push-ups', 'Tricep dips', 'Plank shoulder taps', 'Push-ups', 'Diamond push-ups', 'Stretch'],
+    video: 'toned arms workout no equipment 20 minutes' },
+  { id: 'walk-home', name: 'Walk at home', emoji: '🏠', met: 4.0, min: 30, level: 'simple', who: 'all', goal: 'loss',
+    help: 'Walking in your living room. Easy on any fasting day and it really adds up.',
+    moves: ['March warm up', 'Side steps + arms', 'Knee lifts', 'Brisk march', 'Side steps + arms', 'Cool down'],
+    video: 'walk at home workout 30 minutes' },
 );
 // which workouts have jumping / need equipment
-const JUMPY = ['hiit', 'rope', 'run', 'w-hiit', 'm-burpee', 'w-strong', 'm-cali', 'kp-skz'];
-const NEEDS = { cycle: ['bike'], rope: ['rope'], 'm-cali': ['bar'], 'm-dumb': ['dumbbells'], 'w-strong': ['dumbbells'] };
+const JUMPY = ['hiit', 'rope', 'w-hiit', 'm-burpee', 'w-strong', 'kp-skz'];
+const NEEDS = { rope: ['rope'], 'w-strong': ['dumbbells'] };
 WORKOUTS.forEach(w => { if (JUMPY.includes(w.id)) w.jump = true; if (NEEDS[w.id]) w.needs = NEEDS[w.id]; });
 
-const hasGear = w => !w.needs || w.needs.some(g => (S.gear || ['none']).includes(g));
+const hasGear = w => !w.needs || w.needs.some(g => g === 'chair' || (S.gear || ['none']).includes(g));
 
 // exercise picture for each move
 const MOVE_ICONS = [
