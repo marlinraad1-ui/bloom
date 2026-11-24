@@ -290,10 +290,6 @@ const WORKOUTS = [
     video: 'strength and HIIT workout women 40 minutes dumbbells' },
 
   // ---- Men ----
-  { id: 'm-box', name: 'Boxing cardio', emoji: '🥊', met: 7.8, min: 30, level: 'medium', who: 'men', goal: 'loss',
-    help: 'Shadow boxing burns big and feels powerful. Great stress release.',
-    moves: ['Stance + bounce', 'Jab cross', 'Hooks', 'Uppercuts', 'Combos', 'Slip and duck', 'Cool down'],
-    video: 'boxing cardio workout 30 minutes at home' },
   { id: 'm-burpee', name: 'Burpee & push-up HIIT', emoji: '🔥', met: 8.5, min: 25, level: 'max', who: 'men', goal: 'loss',
     help: 'Brutal and effective. Max calorie burn. Not on long fast days.',
     moves: ['Burpees', 'Rest', 'Push-ups', 'Rest', 'Squat jumps', 'Rest', 'Mountain climbers', 'Cool down'],

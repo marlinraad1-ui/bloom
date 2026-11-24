@@ -21,39 +21,32 @@ const TALL = new Set([8233047, 4159114, 8402077, 4159115, 4159116]);
 
 // zone: cardio / legs / glutes / abs / arms / full. jump: high impact. eq: what you need. lvl: 1 easy to 3 hard
 const EX = {
-  jacks:    { n: 'Jumping jacks', v: 4764177, zone: 'cardio', jump: 1, met: 8, lvl: 1, tip: ['Land softly on the balls of your feet', 'Arms all the way up', 'Easier: step out one leg at a time'] },
-  highknee: { n: 'High knees', v: 8691724, zone: 'cardio', jump: 1, met: 8, lvl: 2, tip: ['Knees up to hip height', 'Pump your arms', 'Easier: march fast without jumping'] },
-  climbers: { n: 'Mountain climbers', v: 6525469, zone: 'abs', met: 8, lvl: 2, tip: ['Hands under shoulders, flat back', 'Drive knees to chest fast', 'Easier: slow and controlled'] },
+  jacks:    { n: 'Jumping jacks', anim: 'jacks', zone: 'cardio', jump: 1, met: 8, lvl: 1, tip: ['Land softly on the balls of your feet', 'Arms all the way up', 'Go faster every 10 seconds'] },
+  knees:    { n: 'Fast knee drives', anim: 'walk', zone: 'cardio', met: 6.5, lvl: 1, tip: ['Drive each knee up to hip height', 'Pump your arms hard', 'Stay on the balls of your feet'] },
+  runplace: { n: 'Run in place', anim: 'jog', zone: 'cardio', jump: 1, met: 8, lvl: 1, tip: ['Quick, light steps', 'Arms pumping', 'Sprint the last 10 seconds'] },
+  rope:     { n: 'Jump rope', anim: 'rope', zone: 'cardio', jump: 1, eq: 'rope', met: 11, lvl: 2, tip: ['Small jumps, wrists turn the rope', 'Stay on the balls of your feet'] },
   burpee:   { n: 'Burpees', anim: 'burpee', zone: 'full', jump: 1, met: 10, lvl: 3, tip: ['Squat, hands down, jump back to plank', 'Jump up with arms high', 'Easier: step back instead of jumping'] },
+  kick:     { n: 'Squat + kick', anim: 'kick', zone: 'full', met: 7, lvl: 2, tip: ['Squat down', 'Stand up and kick forward', 'Switch legs'] },
+  inchworm: { n: 'Inchworms', anim: 'inchworm', zone: 'full', met: 5.5, lvl: 2, tip: ['Fold forward, walk hands out to plank', 'Walk hands back and stand'] },
   jsquat:   { n: 'Jump squats', anim: 'jumpsquat', zone: 'legs', jump: 1, met: 9, lvl: 3, tip: ['Sit back into a squat', 'Explode up, land soft', 'Easier: regular squats'] },
   splitj:   { n: 'Split jumps', anim: 'splitjump', zone: 'legs', jump: 1, met: 9, lvl: 3, tip: ['Lunge, then jump and switch legs', 'Land softly in a lunge', 'Easier: alternating lunges'] },
-  boxing:   { n: 'Shadow boxing', v: 7187405, zone: 'cardio', met: 7.5, lvl: 1, tip: ['Fast jabs and crosses', 'Stay light on your feet', 'Breathe out on every punch'] },
-  rope:     { n: 'Jump rope', v: 4159115, zone: 'cardio', jump: 1, eq: 'rope', met: 11, lvl: 2, tip: ['Small jumps, wrists turn the rope', 'Stay on the balls of your feet'] },
-  stepup:   { n: 'Step ups', v: 8401254, zone: 'legs', eq: 'stairs', met: 7, lvl: 1, tip: ['Use a sturdy step or stair', 'Push through the heel', 'Switch legs each rep'] },
-  squat:    { n: 'Squats', v: 8837118, zone: 'legs', met: 5.5, lvl: 1, tip: ['Feet shoulder width', 'Hips back like sitting on a chair', 'Chest up, knees over toes'] },
-  sumo:     { n: 'Sumo squats', v: 6525475, zone: 'glutes', met: 5.5, lvl: 1, tip: ['Wide stance, toes out', 'Sink straight down', 'Squeeze your glutes up'] },
-  lunge:    { n: 'Lunges', v: 8233047, zone: 'legs', met: 6, lvl: 1, tip: ['Big step, both knees 90°', 'Front knee over ankle', 'Alternate legs'] },
-  rlunge:   { n: 'Reverse lunges', v: 6525491, zone: 'glutes', met: 6, lvl: 1, tip: ['Step back, lower the back knee', 'Push through the front heel', 'Easier on the knees'] },
-  slunge:   { n: 'Side lunges', v: 6525502, zone: 'legs', met: 6, lvl: 2, tip: ['Step wide to one side', 'Sit back on that leg, other leg straight', 'Push back to center'] },
-  bridge:   { n: 'Glute bridges', v: 6525487, zone: 'glutes', met: 4, lvl: 1, tip: ['Feet flat, close to your hips', 'Lift hips, squeeze at the top', 'Lower slowly'] },
-  donkey:   { n: 'Donkey kicks', v: 6525495, zone: 'glutes', met: 4.5, lvl: 1, tip: ['On all fours, knee bent', 'Kick the heel up to the ceiling', 'Don\'t arch your lower back'] },
-  kick:     { n: 'Squat + kick', anim: 'kick', zone: 'full', met: 7, lvl: 2, tip: ['Squat down', 'Stand up and kick forward', 'Switch legs'] },
-  crunch:   { n: 'Crunches', v: 8233228, zone: 'abs', met: 4, lvl: 1, tip: ['Lower back stays on the floor', 'Lift shoulders, not your neck', 'Breathe out going up'] },
-  bicycle:  { n: 'Bicycle crunches', v: 5025822, zone: 'abs', met: 5, lvl: 2, tip: ['Elbow to opposite knee', 'Slow and controlled', 'Other leg straight'] },
-  legraise: { n: 'Leg raises', v: 6525490, zone: 'abs', met: 4.5, lvl: 2, tip: ['Hands under your hips', 'Legs straight up and slowly down', 'Easier: bend your knees'] },
+  squat:    { n: 'Squats', anim: 'squat', zone: 'legs', met: 5.5, lvl: 1, tip: ['Feet shoulder width', 'Hips back like sitting on a chair', 'Chest up, push through your heels'] },
+  lunge:    { n: 'Lunges', anim: 'lunge', zone: 'legs', met: 6, lvl: 1, tip: ['Big step, both knees 90°', 'Front knee over ankle', 'Alternate legs'] },
+  stepup:   { n: 'Chair step ups', anim: 'stepup', zone: 'legs', eq: 'chair', met: 7, lvl: 1, tip: ['Use a sturdy chair or stair', 'Push through the heel', 'Switch legs each rep'] },
+  rlunge:   { n: 'Reverse lunges', anim: 'lunge', zone: 'glutes', met: 6, lvl: 1, tip: ['Step back, lower the back knee', 'Push through the front heel', 'Squeeze your booty at the top'] },
+  bridge:   { n: 'Glute bridges', anim: 'bridge', zone: 'glutes', met: 4.5, lvl: 1, tip: ['Feet flat, close to your hips', 'Lift hips, squeeze hard at the top', 'Lower slowly'] },
   revcr:    { n: 'Reverse crunches', anim: 'crunch', zone: 'abs', met: 4.5, lvl: 1, tip: ['Knees to chest', 'Lift hips a little off the floor', 'Lower slowly'] },
-  situp:    { n: 'Sit ups', v: 4488002, zone: 'abs', met: 5, lvl: 2, tip: ['Feet on the floor', 'Roll up to sitting', 'Easier: crunches'] },
-  abcircle: { n: 'Seated ab circles', anim: 'abcircle', zone: 'abs', met: 4, lvl: 2, tip: ['Lean back, legs up', 'Draw circles with your knees'] },
+  abcircle: { n: 'Seated ab circles', anim: 'abcircle', zone: 'abs', met: 4.5, lvl: 2, tip: ['Lean back, legs up', 'Draw circles with your knees'] },
   frog:     { n: 'Frog press', anim: 'frogpress', zone: 'abs', met: 4.5, lvl: 2, tip: ['Lie back, knees bent wide', 'Press legs out and pull back in'] },
-  plank:    { n: 'Plank', v: 8836970, zone: 'abs', met: 4, lvl: 1, tip: ['Straight line head to heels', 'Squeeze belly and glutes', 'Easier: on your knees'] },
+  reach:    { n: 'Plank arm reach', anim: 'highplank', zone: 'abs', met: 5, lvl: 2, tip: ['High plank, hips stay still', 'Reach one arm up, switch', 'Squeeze your belly'] },
   tplank:   { n: 'T plank', anim: 'plank', zone: 'abs', met: 5, lvl: 3, tip: ['From plank, rotate and reach up', 'Switch sides'] },
-  pushup:   { n: 'Push ups', v: 4258997, zone: 'arms', met: 6, lvl: 2, tip: ['Hands a bit wider than shoulders', 'Chest to the floor', 'Easier: on your knees'] },
-  dips:     { n: 'Tricep dips', v: 4159114, zone: 'arms', eq: 'chair', met: 5, lvl: 2, tip: ['Hands on a chair behind you', 'Bend elbows straight back', 'Legs bent = easier'] },
-  curls:    { n: 'Bicep curls', v: 4159116, zone: 'arms', eq: 'dumbbells', met: 4, lvl: 1, tip: ['Elbows stay at your sides', 'Curl up, lower slowly'] },
-  inchworm: { n: 'Inchworms', anim: 'inchworm', zone: 'full', met: 5, lvl: 2, tip: ['Fold forward, walk hands out to plank', 'Walk hands back and stand'] },
+  pushup:   { n: 'Push ups', anim: 'pushup', zone: 'arms', met: 6, lvl: 2, tip: ['Hands a bit wider than shoulders', 'Chest to the floor', 'Easier: on your knees'] },
+  widepush: { n: 'Wide push ups', anim: 'widepushup', zone: 'arms', met: 6, lvl: 2, tip: ['Hands wide', 'Chest down between your hands', 'Easier: on your knees'] },
+  stagger:  { n: 'Staggered push ups', anim: 'staggered', zone: 'arms', met: 6.5, lvl: 3, tip: ['One hand forward, one back', 'Lower your chest to the floor', 'Switch hands each round'] },
 };
-const WARM = { n: 'Warm up: arm swings + march', v: 8402077, met: 3.5, tip: ['Loosen up, get warm', 'Breathe deep'] };
-const COOL = { n: 'Cool down stretch', v: 9001922, met: 2.5, tip: ['Slow deep breaths', 'Hold each stretch'] };
+// a real warm up: 3 moves, 20 s each. Cool down: 2 stretches, 30 s each
+const warmMoves = p => [p.nojump ? EX.knees : EX.jacks, EX.squat, EX.inchworm];
+const COOLS = [{ n: 'Cobra stretch', anim: 'cobra', met: 2.5, tip: ['Hips down, chest up', 'Breathe deep into your belly'] }, { n: 'Full body stretch', anim: 'stretch', met: 2.5, tip: ['Reach long', 'Slow deep breaths'] }];
 
 const FOCUS_NAMES = { full: 'Full body burn', abs: 'Belly burn', legs: 'Legs & thighs', glutes: 'Booty builder', arms: 'Arms & upper body', cardio: 'Fat blast cardio' };
 const FOCUS_EMOJI = { full: '🔥', abs: '💎', legs: '🦵', glutes: '🍑', arms: '💪', cardio: '⚡' };
@@ -92,13 +85,13 @@ function buildSession(focus, minutes, seed) {
   if (p.goal !== 'muscle') moves = moves.concat(pick(extra.filter(x => !moves.includes(x)), 1));
   if (moves.length < 4) moves = moves.concat(pick(pool.filter(x => !moves.includes(x)), 4 - moves.length));
   const round = moves.length * work + (moves.length - 1) * rest;
-  const rounds = Math.max(2, Math.min(5, Math.round((minutes * 60 - 150 + 45) / (round + 45))));
-  const steps = [{ ex: WARM, sec: 75, type: 'warm' }];
+  const rounds = Math.max(2, Math.min(5, Math.round((minutes * 60 - 120 + 45) / (round + 45))));
+  const steps = warmMoves(p).map(ex => ({ ex, sec: 20, type: 'warm', info: 'Warm up' }));
   for (let r = 1; r <= rounds; r++) {
     moves.forEach(([, e], i) => { steps.push({ ex: e, sec: work, type: 'work', info: `Round ${r} of ${rounds}` }); if (i < moves.length - 1) steps.push({ ex: { n: 'Rest' }, sec: rest, type: 'rest' }); });
     if (r < rounds) steps.push({ ex: { n: 'Round break: water and breathe' }, sec: 45, type: 'rest' });
   }
-  steps.push({ ex: COOL, sec: 75, type: 'cool' });
+  COOLS.forEach(ex => steps.push({ ex, sec: 30, type: 'cool', info: 'Cool down' }));
   const secs = steps.reduce((a, s) => a + s.sec, 0);
   const kcal = Math.round(steps.reduce((a, s) => a + (s.ex.met || 1.5) * kg() * s.sec / 3600 * (s.type === 'rest' ? .4 : 1), 0));
   return { focus, moves: moves.map(([k]) => k), steps, secs, kcal, work, rest, rounds, title: FOCUS_NAMES[focus] };
@@ -136,11 +129,9 @@ function coachQuiz() {
 }
 
 // ---------- Move tab ----------
-const exVisual = (e, cls = '') => e.v && navigator.onLine
-  ? `<video class="vid ${TALL.has(e.v) ? 'tall' : ''} ${cls}" src="https://videos.pexels.com/video-files/${PX_V(e.v)}" muted autoplay loop playsinline preload="metadata"></video>`
-  : e.anim ? `<div class="lot ${cls}" data-a="${e.anim}"></div>` : `<span class="noviz">${FOCUS_EMOJI.full}</span>`;
+const exVisual = (e, cls = '') => e.anim ? `<div class="lot ${cls}" data-a="${e.anim}"></div>` : `<span class="noviz">${FOCUS_EMOJI.full}</span>`;
 const THUMB_NAME = { 4258997: 'covid-19-exercise-interracial-couple-isolation-period-4258997', 4488002: 'crossfit-fit-fitness-girl-4488002', 7187405: 'active-activity-art-athlete-7187405', 9001922: 'beautiful-body-brunette-comfort-9001922', 6525469: 'exercises-girl-sport-sporty-6525469', 6525491: 'exercises-girl-sport-sporty-6525491', 6525502: 'exercises-girl-sport-sporty-6525502', 6525475: 'exercises-girl-sport-sporty-6525475', 6525487: 'exercises-girl-sport-sporty-6525487', 6525495: 'exercises-girl-sport-sporty-6525495', 6525490: 'exercises-girl-sport-sporty-6525490', 8478087: 'boxer-coach-gloves-master-of-sports-8478087', 8472284: 'boxer-coach-gloves-master-of-sports-8472284', 6077273: 'ball-balls-basketball-basketball-basket-6077273', 8402077: 'adult-athlete-ball-beautiful-8402077', 6707719: 'adult-balance-body-care-6707719' };
-const exThumb = e => e.v ? `<img src="https://images.pexels.com/videos/${e.v}/${THUMB_NAME[e.v] || 'pexels-photo-' + e.v}.jpeg?auto=compress&cs=tinysrgb&w=200" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🔥'}))">` : `<div class="lot" data-a="${e.anim}"></div>`;
+const exThumb = e => `<div class="lot" data-a="${e.anim}"></div>`;
 
 const QUICK = [
   { id: 'q-belly', title: '7-min Belly Burn', emoji: '💎', focus: 'abs', min: 7 },
@@ -226,7 +217,7 @@ function playSession(s) {
     <p class="w-burn" id="pBurn"></p>
     <div class="row gap" style="justify-content:center"><button class="btn ghost" id="pPause">⏸ Pause</button><button class="btn ghost" id="pSkip">⏭ Skip</button><button class="btn" id="pStop">Finish</button></div>
     <label class="small toggle-row" style="justify-content:center"><input type="checkbox" id="pVoice" ${S.settings.voiceCoach === false ? '' : 'checked'}> 🔊 Voice coach</label></div>`, () => {
-    const announce = () => { const x = plan[i], n = nextWork(i + 1); coachSay(x.type === 'rest' ? `Rest. ${n ? 'Next, ' + n.ex.n : 'Almost done'}` : x.type === 'cool' ? 'Amazing work. Cool down.' : x.type === 'warm' ? 'Let\'s warm up' : `Go! ${x.ex.n}`); };
+    const announce = () => { const x = plan[i], n = nextWork(i + 1); coachSay(x.type === 'rest' ? `Rest. ${n ? 'Next, ' + n.ex.n : 'Almost done'}` : x.type === 'cool' ? `Cool down. ${x.ex.n}` : x.type === 'warm' ? `Warm up. ${x.ex.n}` : `Go! ${x.ex.n}`); };
     const draw = () => {
       const x = plan[i], [label, cls] = PHASE[x.type];
       $('#pPhase').textContent = label; $('#pPhase').className = 'phase ' + cls;

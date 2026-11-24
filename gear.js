@@ -121,8 +121,8 @@ function gearModal() {
 
 // big real video at the top of the workout page (first move that has one)
 function heroVid(w) {
-  const m = navigator.onLine && typeof vidFor === 'function' ? w.moves.find(x => !/rest|recover|cool down|warm up/i.test(x) && vidFor(x, w)) : null;
-  return m ? `<video class="wk-herovid" src="${vidSrc(vidFor(m, w))}" poster="${vidThumb(vidFor(m, w))}" muted autoplay loop playsinline onerror="this.remove()"></video>` : `<div class="wk-big">${w.emoji}</div>`;
+  const a = w.moves.map(x => animFor(x, w)).find(x => x && x !== 'breathe' && x !== 'walk');
+  return a ? `<div class="lot wk-herovid" data-a="${a}"></div>` : `<div class="wk-big">${w.emoji}</div>`;
 }
 // VIP workout page
 function workoutPage(w) {

@@ -93,6 +93,8 @@ const VID_RULES = [
 ];
 // which real video fits this move (bike and treadmill workouts keep showing the machine)
 function vidFor(m, w) {
+  return null; // no slow stock clips: animations and YouTube only
+
   if (w && !/rest|recover|cool down$/i.test(m)) {
   }
   const r = VID_RULES.find(([re]) => re.test(m)); return r && VIDEOS[r[1]] ? r[1] : null;

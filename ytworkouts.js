@@ -15,6 +15,20 @@ const YTW = [
   { yt: 'm5DJMRYDSc0', kind: 'pilates', name: 'Beginner Pilates Abs', by: 'Blogilates', min: 17, met: 4.0, lvl: 'Easy' },
   { yt: 'Wg6-xYyB0cg', kind: 'pilates', name: 'Quiet Fat Burn (no jumping)', by: 'Blogilates', min: 12, met: 6.0, lvl: 'Medium' },
   { yt: 'I6xCb7s5CE4', kind: 'pilates', name: 'Beautiful Body Pilates', by: 'Blogilates', min: 14, met: 4.0, lvl: 'Easy' },
+  // ---- HIIT: real sweaty full workouts ----
+  { yt: 'UBMk30rjy0o', kind: 'hiit', name: '20-min Full Body Burn', by: 'Pamela Reif', min: 20, met: 7.5, lvl: 'Medium', jump: 1 },
+  { yt: '1skBf6h2ksI', kind: 'hiit', name: '15-min HIIT, lots of calories', by: 'Pamela Reif', min: 15, met: 8.5, lvl: 'Hard', jump: 1 },
+  { yt: 'gFeEUq2624Q', kind: 'hiit', name: '10-min Silent Cardio', by: 'Pamela Reif', min: 10, met: 6.5, lvl: 'Medium' },
+  { yt: '3zl1_XGgDVk', kind: 'hiit', name: 'Flat Belly + Round Booty', by: 'Pamela Reif', min: 22, met: 5.5, lvl: 'Medium' },
+  { yt: 'uvNsr4Fy-DU', kind: 'hiit', name: '20-min HIIT Calorie Burner', by: 'Chloe Ting', min: 21, met: 8.5, lvl: 'Hard', jump: 1 },
+  { yt: 'CGmr02bfHUo', kind: 'hiit', name: 'Full Body Fat Loss', by: 'Chloe Ting', min: 21, met: 7.5, lvl: 'Medium', jump: 1 },
+  { yt: '2MoGxae-zyo', kind: 'hiit', name: '2 Weeks Shred', by: 'Chloe Ting', min: 14, met: 6.5, lvl: 'Medium', jump: 1 },
+  { yt: 'J4wm6qiv5pI', kind: 'hiit', name: '20-min Killer HIIT', by: 'MadFit', min: 21, met: 8.5, lvl: 'Hard', jump: 1 },
+  { yt: 'rI_6l992GrA', kind: 'hiit', name: '30-min HIIT (no jumping)', by: 'MadFit', min: 32, met: 6.5, lvl: 'Medium' },
+  { yt: 'IT94xC35u6k', kind: 'hiit', name: 'Fat Burn for Beginners', by: 'MadFit', min: 22, met: 5.5, lvl: 'Easy' },
+  { yt: 'hLVh5IBsCxk', kind: 'hiit', name: '20-min Killer HIIT', by: 'growingannanas', min: 20, met: 8.5, lvl: 'Hard', jump: 1 },
+  { yt: '1V3LgKFZ3dI', kind: 'hiit', name: 'All Standing Fat Burn (no jumping)', by: 'Nobadaddiction', min: 20, met: 6.5, lvl: 'Medium' },
+  { yt: '1kOalwKttKo', kind: 'hiit', name: 'Intense Tabata Cardio', by: 'growwithjo', min: 23, met: 8.5, lvl: 'Hard', jump: 1 },
   // ---- K-pop dance ----
   { yt: 'xUoY-SzeQdo', kind: 'kpop', name: 'BLACKPINK Dance Party', by: 'MIZI', min: 13, met: 7.0, lvl: 'Medium', jump: 1 },
   { yt: 'zrscH2x4UNU', kind: 'kpop', name: 'TWICE Dance Party', by: 'MIZI', min: 14, met: 7.0, lvl: 'Medium', jump: 1 },
@@ -29,7 +43,7 @@ const YTW = [
   { yt: '2d9-eUqoknk', kind: 'kpop', name: 'K-pop Tone (no jumping)', by: 'Aurora Ouyang', min: 25, met: 5.5, lvl: 'Easy' },
 ];
 const ytwKcal = v => Math.round(workoutKcal(v, v.min));
-let ytwTab = 'pilates';
+let ytwTab = 'hiit';
 
 function renderYTW() {
   const box = $('#ytwCard'); if (!box) return;
@@ -37,7 +51,7 @@ function renderYTW() {
   const list = YTW.filter(v => v.kind === ytwTab).sort((a, b) => (nojump ? (a.jump || 0) - (b.jump || 0) : 0) || ytwKcal(b) - ytwKcal(a));
   const done = new Set((S.ytwDone || []));
   box.innerHTML = `<div class="ytw-head"><h3>🎀 Follow along</h3><span class="small">${isVip() ? 'press play, sweat, glow ✨' : '<span class="vip-badge">VIP</span>'}</span></div>
-    <div class="ytw-tabs"><button class="${ytwTab === 'pilates' ? 'on' : ''}" data-t="pilates">🩰 Pilates</button><button class="${ytwTab === 'kpop' ? 'on' : ''}" data-t="kpop">🎤 K-pop dance</button></div>
+    <div class="ytw-tabs"><button class="${ytwTab === 'pilates' ? 'on' : ''}" data-t="pilates">🩰 Pilates</button><button class="${ytwTab === 'hiit' ? 'on' : ''}" data-t="hiit">🔥 HIIT</button><button class="${ytwTab === 'kpop' ? 'on' : ''}" data-t="kpop">🎤 K-pop</button></div>
     <div class="ytw-row">${list.map(v => `<button class="ytw-v" data-yt="${v.yt}">
       <span class="ytw-th"><img src="https://i.ytimg.com/vi/${v.yt}/mqdefault.jpg" alt="" loading="lazy"><i class="ytw-play">▶</i><em>${v.min} min</em>${done.has(v.yt) ? '<s class="ytw-done">✓ done</s>' : ''}</span>
       <b>${esc(v.name)}</b><span class="ytw-meta">🔥 ${ytwKcal(v)} kcal · ${v.jump ? '🦘 jumping' : '🤫 no jumping'}</span><span class="ytw-by">♡ ${esc(v.by)} · ${v.lvl}</span></button>`).join('')}</div>`;
@@ -55,7 +69,7 @@ function ytwPlay(v) {
     <a class="linkbtn" href="https://www.youtube.com/watch?v=${v.yt}" target="_blank" rel="noopener">Open on YouTube</a></div>`, m => {
     m.classList.add('ytw-modal');
     const finish = min => {
-      logWorkout({ name: `${v.kind === 'kpop' ? '🎤' : '🩰'} ${v.name}`, met: v.met }, min);
+      logWorkout({ name: `${{ kpop: '🎤', hiit: '🔥', pilates: '🩰' }[v.kind]} ${v.name}`, met: v.met }, min);
       S.ytwDone = [...new Set([...(S.ytwDone || []), v.yt])].slice(-60); save();
       closeModal(); celebrate(); renderYTW();
     };
